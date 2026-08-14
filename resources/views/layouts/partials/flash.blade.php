@@ -12,7 +12,21 @@
     </div>
 @endif
 
-@if(session('error') || $errors->any())
+@php
+    $hasErrors = false;
+    $errorList = [];
+    if (isset($errors)) {
+        if (is_object($errors) && method_exists($errors, 'any') && $errors->any()) {
+            $hasErrors = true;
+            $errorList = $errors->all();
+        } elseif (is_array($errors) && count($errors) > 0) {
+            $hasErrors = true;
+            $errorList = $errors;
+        }
+    }
+@endphp
+
+@if(session('error') || $hasErrors)
     <div class="mb-6 rounded-xl border border-rose-200 bg-rose-50/90 p-4 shadow-sm backdrop-blur transition-all flex items-start gap-3">
         <div class="rounded-lg bg-rose-100 p-1.5 text-rose-700">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -24,10 +38,10 @@
             @if(session('error'))
                 <p class="text-xs text-rose-800 mt-0.5">{{ session('error') }}</p>
             @endif
-            @if($errors->any())
+            @if($hasErrors)
                 <ul class="mt-1.5 list-disc list-inside text-xs text-rose-800 space-y-0.5">
-                    @foreach($errors->all() as $error)
-                        <li>{{ $error }}</li>
+                    @foreach($errorList as $err)
+                        <li>{{ $err }}</li>
                     @endforeach
                 </ul>
             @endif

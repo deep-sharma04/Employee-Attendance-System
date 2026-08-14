@@ -9,13 +9,24 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     /**
-     * Display the employee read-only personal profile.
+     * Display the employee read-only personal profile with masked bank details.
      */
     public function show(): View
     {
         $user = Auth::user();
-        $employee = $user?->employee;
+        $employee = $user?->employee()
+            ->with([
+                'shift',
+                'leaveBalances.leaveType',
+                'attendanceRecords' => fn($q) => $q->latest('attendance_date')->limit(5),
+                'documents.documentType',
+                'payslips' => fn($q) => $q->latest('year')->latest('month')->limit(3),
+            ])
+            ->first();
 
-        return view('employee.profile', compact('user', 'employee'));
+        return view('employee.profile', [
+            'user' => $user,
+            'employee' => $employee,
+        ]);
     }
 }

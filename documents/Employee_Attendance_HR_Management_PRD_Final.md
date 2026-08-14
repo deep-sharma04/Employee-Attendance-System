@@ -1780,3 +1780,111 @@ The next engineering artifacts should be produced from this PRD in this order:
 8. **Deployment and production checklist**
 
 This order should be followed so that attendance and payroll business rules are implemented consistently across database, backend, frontend and testing.
+
+---
+
+# 46. Final Extended Module: AI/MCP Architecture (Phases 30–34)
+
+## Core Architectural Principle — MCP-First
+
+The V1 AI integration architecture is strictly **MCP-First**.
+
+The Laravel web application / backend will **NOT** directly integrate or call external LLM APIs (such as OpenAI, Mistral, Gemini, Claude).
+No `MISTRAL_API_KEY`, `OPENAI_API_KEY`, `GEMINI_API_KEY`, or embedded LLM chat UI is required in Laravel for V1.
+
+```text
+VS Code / Anti-Gravity
+        │
+        │ GitHub Copilot / IDE AI Agent
+        │
+        ▼
+   Internal MCP Server
+        │
+        ▼
+ Laravel Backend
+        │
+        ├── RBAC Enforcement
+        ├── Policies & Authorization
+        ├── Project Scope
+        ├── Team Scope
+        ├── Client Scope
+        ├── Approval Gates
+        ├── Audit Logging
+        │
+        ▼
+ Existing Laravel Business Services
+        │
+        ▼
+      MySQL
+```
+
+- **AI Client**: Provides the reasoning / LLM capability (e.g., VS Code GitHub Copilot Agent, Anti-Gravity).
+- **Internal MCP Server**: The controlled, secure tool interface between the AI client and the Laravel application.
+- **Laravel Backend**: Remains the single source of truth for authorization, business rules, validation, scope, mutations, audit, approvals, transactions, and data isolation.
+
+---
+
+# Phase 30 — AI/MCP Foundation
+
+| Task ID | Main Module | Sub-Module | User Group | Task Title | Task Description | Task Type | Dependent Task ID | Priority | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| T267 | AI/MCP | Database Schema | Developer | Create AI Conversation & Action Tables | Build `ai_conversations`, `ai_messages`, and `ai_action_logs` with authenticated user scope, project scope, action metadata, approval state, execution status, and timestamps for MCP/AI activity auditing. | Database | T009 | High | Not Started |
+| T268 | AI/MCP | AI Client Integration | Developer | Support MCP AI Client Workflow | Support AI clients such as VS Code GitHub Copilot Agent and Anti-Gravity through the internal MCP server. No embedded LLM chat UI or direct LLM provider integration is required in V1. | Backend | T267,T276 | High | Not Started |
+| T269 | AI/MCP | MCP Integration Layer | Developer | Build MCP Integration Layer | Build the Laravel-side MCP integration layer that exposes authorized business tools to connected AI clients. Laravel must not directly call an external LLM provider in V1. | Backend | T267 | Critical | Not Started |
+| T270 | AI/MCP | Identity & Scope | Developer | Enforce Strict MCP User & Project Scope | Every MCP request must inherit the authenticated user's RBAC, team, project, and client scope and can never gain permissions beyond the invoking user. | Backend | T203,T269 | Critical | Not Started |
+| T271 | AI/MCP | Data Isolation | Developer | Block HR/Payroll Access from MCP | Explicitly deny MCP/AI access to salary, bank details, attendance IP, payroll mutations, HR mutations, and other restricted HR data. | Backend | T270 | Critical | Not Started |
+| T272 | AI/MCP | Approval | Project Users | Build MCP Action Approval Flow | Support approval-required MCP actions by returning the proposed action, affected records, scope, required approver, and approval state before sensitive mutations are executed. | Backend | T269,T270 | High | Not Started |
+| T273 | AI/MCP | Audit | Developer | Log AI/MCP Actions | Immutably record AI/MCP requests, tool calls, authenticated actor, project/team scope, parameters, approvals/rejections, execution status, and outcome. | Backend | T205,T269 | Critical | Not Started |
+| T274 | AI/MCP | Failure Handling | Developer | Implement MCP Tool Failure & Retry Handling | Handle timeouts, invalid arguments, unavailable tools, duplicate execution attempts, authorization failures, and partial failures safely without corrupting business data. | Backend | T269 | High | Not Started |
+| T275 | AI/MCP | Rate Policy | Developer | Apply V1 AI/MCP Usage Policy | No AI rate limiting is required in V1. Keep configuration hooks for future usage limits without enforcing them in the initial release. | Backend | T269 | Low | Not Started |
+
+# Phase 31 — Internal MCP Server & Tools
+
+| Task ID | Main Module | Sub-Module | User Group | Task Title | Task Description | Task Type | Dependent Task ID | Priority | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| T276 | MCP | Server Setup | Developer | Build Internal MCP Server | Build an MCP server for authorized AI clients such as VS Code GitHub Copilot Agent and Anti-Gravity. Do not expose a public/external MCP endpoint in V1. | Backend | T269 | Critical | Not Started |
+| T277 | MCP | Authentication | Developer | Secure Internal MCP Transport | Require authenticated, authorized access to MCP and reject unauthenticated, unauthorized, or unsupported external MCP clients. | Backend | T276,T270 | Critical | Not Started |
+| T278 | MCP | Tool Registry | Developer | Create MCP Tool Registry | Create a centralized registry mapping MCP tool names to existing Laravel business services. MCP handlers must not duplicate existing business rules. | Backend | T276 | High | Not Started |
+| T279 | MCP | Client Tools | Developer | Implement Client MCP Tools | Implement `client.create`, `client.update`, and `client.search` using existing Laravel services and policy checks. | Backend | T278,T207 | Medium | Not Started |
+| T280 | MCP | Project Tools | Developer | Implement Project MCP Tools | Implement `project.create`, `project.update`, and `project.search` using existing Laravel project services and project-scope authorization. | Backend | T278,T220 | High | Not Started |
+| T281 | MCP | Task Tools | Developer | Implement Task MCP Tools | Implement `task.create`, `task.update`, `task.assign`, and `task.complete` using existing task services, team/project policies, and authorization rules. | Backend | T278,T227 | Critical | Not Started |
+| T282 | MCP | Timesheet Tools | Developer | Implement Timesheet MCP Tools | Implement `timesheet.create` and `timesheet.search` with employee/project scope, timesheet state validation, and existing approval rules. | Backend | T278,T237 | Medium | Not Started |
+| T283 | MCP | Employee Tools | Developer | Implement Restricted Employee Search | Implement `employee.search` returning only permitted employee information such as name, role, skills, availability, and minimum permitted project/team context. No `employee.create` or `employee.update` MCP tool. | Backend | T278,T217 | High | Not Started |
+| T284 | MCP | Tool Validation | Developer | Validate MCP Tool Schemas & Authorization | Validate parameters, allowed fields, authenticated actor, authorization context, target project/team/client scope, and destructive-operation flags before every tool execution. | Backend | T278,T270 | Critical | Not Started |
+
+# Phase 32 — AI-Assisted Project Intelligence
+
+IMPORTANT:
+The AI reasoning is performed by the connected AI client (Copilot/Anti-Gravity).
+Laravel provides only authorized project data and tools through MCP.
+
+| Task ID | Main Module | Sub-Module | User Group | Task Title | Task Description | Task Type | Dependent Task ID | Priority | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| T285 | AI Intelligence | Natural Language Search | Project Users | Support Natural-Language Project Search | Enable connected AI clients to answer natural-language questions such as “Show all overdue tasks” by retrieving only authorized project data through MCP tools. | MCP/AI | T269,T281 | Medium | Not Started |
+| T286 | AI Intelligence | Risk Analysis | Manager / Super Admin | Explain Deterministic Project Health | Allow connected AI clients to explain existing project-health results using authorized deadline, milestone, completion, and overdue-task evidence without replacing the deterministic health engine. | MCP/AI | T223,T269 | Medium | Not Started |
+| T287 | AI Intelligence | Allocation | Manager / Team Lead | Provide Task Allocation Recommendations | Allow connected AI clients to recommend employees based on permitted skills, availability, workload, and team/project scope. Recommendations must not bypass authorization. | MCP/AI | T217,T258,T269 | Low | Not Started |
+| T288 | AI Intelligence | Reports | Manager / Super Admin | Generate Management Reports via MCP Data | Allow connected AI clients to generate summaries of authorized productivity, workload, deadlines, project progress, and budget utilization using MCP-retrieved data. | MCP/AI | T257,T269 | Low | Not Started |
+| T289 | AI Intelligence | Grounding | Developer | Ground AI Responses in Authorized Project Data | Ensure AI-generated answers are based on retrieved authorized records, distinguish confirmed data from assumptions or estimates, and clearly identify missing or uncertain information. | MCP/AI | T285,T286 | High | Not Started |
+
+# Phase 33 — AI-Assisted Workflow Execution
+
+| Task ID | Main Module | Sub-Module | User Group | Task Title | Task Description | Task Type | Dependent Task ID | Priority | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| T290 | AI Workflow | Creation | Manager / Super Admin | AI-Assisted Project & Task Creation | Allow connected AI clients to request authorized `project.create` and `task.create` MCP operations after validation and any required approval. | MCP/AI | T280,T281,T272 | High | Not Started |
+| T291 | AI Workflow | Assignment | Manager / Team Lead | AI-Assisted Task Assignment | Allow connected AI clients to execute `task.assign` only within the invoking user's authorized team/project scope. | MCP/AI | T281,T270 | High | Not Started |
+| T292 | AI Workflow | Approval Gates | Developer | Implement Server-Side MCP Approval Gates | Enforce approval rules on the Laravel server. Super Admin can approve within global authority; Manager can approve within scope; Team Lead can propose but cannot approve sensitive MCP actions. | Backend | T272,T284 | Critical | Not Started |
+| T293 | AI Workflow | Destructive Actions | Manager / Super Admin | Execute Approved Destructive MCP Actions | Support approved sensitive actions such as bulk task reassignment through MCP. No automatic undo window is required; all executions remain auditable. | Backend | T272,T292 | High | Not Started |
+| T294 | AI Workflow | Idempotency | Developer | Prevent Duplicate MCP Mutations | Prevent retries or repeated AI/MCP requests from creating duplicate projects, tasks, assignments, or timesheet entries. | Backend | T290,T291,T293 | Critical | Not Started |
+| T295 | AI Workflow | Transaction Safety | Developer | Make MCP Mutations Transactional | Use safe database transactions for multi-step MCP mutations and return an explicit failure state when consistency cannot be guaranteed. | Backend | T290,T293 | Critical | Not Started |
+
+# Phase 34 — AI/MCP Testing & Security
+
+| Task ID | Main Module | Sub-Module | User Group | Task Title | Task Description | Task Type | Dependent Task ID | Priority | Status |
+|---|---|---|---|---|---|---|---|---|---|
+| T296 | Testing | MCP Authorization | Developer | Test MCP Authorization & Scope | Verify MCP cannot act outside the authenticated user's RBAC, team, project, or client scope regardless of the AI client's request. | Testing | T270,T283 | Critical | Not Started |
+| T297 | Testing | Sensitive Data | Developer | Test Sensitive HR Data Isolation | Verify AI/MCP clients cannot query salary, bank details, attendance IP, payroll, or restricted HR data. | Testing | T246,T271 | Critical | Not Started |
+| T298 | Testing | MCP Tools | Developer | Test MCP Tool Execution | Verify every MCP tool validates inputs, calls the correct Laravel business service, respects policies, and handles errors safely. | Testing | T278,T284 | Critical | Not Started |
+| T299 | Testing | Client Isolation | Developer | Test Client Read-Only Isolation | Verify clients cannot use MCP to write or access internal comments, costs, budgets, HR records, or non-shared documents. | Testing | T246 | Critical | Not Started |
+| T300 | Testing | AI Audit | Developer | Verify AI/MCP Audit Immutability | Verify AI/MCP action records cannot be modified or deleted through normal application paths and retain sufficient actor, scope, action, approval, and outcome evidence. | Testing | T273 | High | Not Started |
+| T301 | Testing | Prompt/Tool Safety | Developer | Test AI Prompt & Tool Boundary Safety | Test prompt injection, unauthorized tool requests, malicious parameters, cross-project references, privilege escalation, and policy-bypass attempts against MCP tools. | Testing | T270,T284 | Critical | Not Started |
+| T302 | Testing | Mutation Safety | Developer | Test MCP Idempotency & Transactions | Verify retries and partial failures do not create duplicate or inconsistent projects, tasks, assignments, or timesheet records. | Testing | T294,T295 | Critical | Not Started |

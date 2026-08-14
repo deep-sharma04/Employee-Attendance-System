@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Auth;
 use App\Enums\EmployeeStatus;
 use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Services\Audit\AuditLoggerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,6 +16,10 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        protected AuditLoggerService $auditLogger
+    ) {}
+
     /**
      * Show the login form.
      */
@@ -29,29 +35,39 @@ class AuthController extends Controller
     /**
      * Handle login authentication with rate limiting and secure session regeneration.
      */
-    public function login(Request $request): RedirectResponse
+    public function login(LoginRequest $request): RedirectResponse
     {
-        $credentials = $request->validate([
-            'username' => ['required', 'string'],
-            'password' => ['required', 'string'],
-        ]);
-
+        $credentials = $request->only('username', 'password');
+        $selectedRole = $request->input('role');
+        $remember = $request->boolean('remember');
         $throttleKey = Str::transliterate(Str::lower($credentials['username']) . '|' . $request->ip());
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             return back()->withErrors([
                 'username' => "Too many login attempts. Please wait {$seconds} seconds before trying again.",
-            ])->onlyInput('username');
+            ])->onlyInput('username', 'role');
         }
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::attempt($credentials, $remember)) {
             RateLimiter::clear($throttleKey);
             $request->session()->regenerate();
 
             $user = Auth::user();
 
-            // Verify active account flag
+            // Verify the selected role matches the user's actual role
+            $userRole = $user->role instanceof UserRole ? $user->role->value : (string) $user->role;
+            if ($userRole !== $selectedRole) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'role' => 'The selected role does not match your account. Please select the correct role.',
+                ])->onlyInput('username', 'role');
+            }
+
+            // Verify active user flag (T027 / T034)
             if (isset($user->is_active) && !$user->is_active) {
                 Auth::logout();
                 $request->session()->invalidate();
@@ -59,10 +75,10 @@ class AuthController extends Controller
 
                 return back()->withErrors([
                     'username' => 'These credentials do not match our records.',
-                ]);
+                ])->onlyInput('username', 'role');
             }
 
-            // Verify active employee status
+            // Verify active linked employee status (T027 / T034)
             if ($user->employee && isset($user->employee->status)) {
                 $status = $user->employee->status instanceof EmployeeStatus
                     ? $user->employee->status->value
@@ -75,9 +91,23 @@ class AuthController extends Controller
 
                     return back()->withErrors([
                         'username' => 'These credentials do not match our records.',
-                    ]);
+                    ])->onlyInput('username', 'role');
                 }
             }
+
+            // Update last login metrics
+            $user->forceFill([
+                'last_login_at' => now(),
+                'last_login_ip' => $request->ip(),
+            ])->save();
+
+            // Audit login
+            $this->auditLogger->log(
+                action: 'auth.login',
+                targetType: 'App\Models\User',
+                targetId: $user->id,
+                description: "User {$user->username} authenticated successfully as {$selectedRole}."
+            );
 
             return $this->redirectUserByRole($user);
         }
@@ -86,7 +116,7 @@ class AuthController extends Controller
 
         return back()->withErrors([
             'username' => 'These credentials do not match our records.',
-        ])->onlyInput('username');
+        ])->onlyInput('username', 'role');
     }
 
     /**
@@ -94,6 +124,17 @@ class AuthController extends Controller
      */
     public function logout(Request $request): RedirectResponse
     {
+        $user = Auth::user();
+
+        if ($user) {
+            $this->auditLogger->log(
+                action: 'auth.logout',
+                targetType: 'App\Models\User',
+                targetId: $user->id,
+                description: "User {$user->username} logged out."
+            );
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -112,6 +153,9 @@ class AuthController extends Controller
             UserRole::SUPER_ADMIN->value => redirect()->intended(route('super-admin.dashboard')),
             UserRole::HR_ADMIN->value => redirect()->intended(route('hr-admin.dashboard')),
             UserRole::EMPLOYEE->value => redirect()->intended(route('employee.dashboard')),
+            UserRole::MANAGER->value => redirect()->intended(route('manager.dashboard')),
+            UserRole::TEAM_LEAD->value => redirect()->intended(route('team-lead.dashboard')),
+            UserRole::CLIENT->value => redirect()->intended(route('client-portal.dashboard')),
             default => redirect()->route('login'),
         };
     }

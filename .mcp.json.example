@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "hrm": {
+      "command": "php",
+      "args": ["artisan", "mcp:serve"],
+      "env": {
+        "MCP_AUTH_TOKEN": "${env:MCP_AUTH_TOKEN}"
+      }
+    }
+  }
+}

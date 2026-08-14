@@ -29,7 +29,8 @@ class SettingsService
                 return $this->defaults();
             }
 
-            $settings = DB::table('company_settings')->pluck('value', 'key')->all();
+            $raw = DB::table('company_settings')->pluck('value', 'key');
+            $settings = is_array($raw) ? $raw : ($raw instanceof \Illuminate\Support\Collection ? $raw->all() : (array) $raw);
             return array_merge($this->defaults(), $settings);
         });
     }

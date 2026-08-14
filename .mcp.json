@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "hrm": {
+      "command": "php",
+      "args": [
+        "artisan",
+        "mcp:serve",
+        "--token=mcp_1IaR9ddttlI2yIOq3CuGuh3RJ5e3RZKo4t233xmQ"
+      ],
+      "env": {
+        "MCP_AUTH_TOKEN": "mcp_1IaR9ddttlI2yIOq3CuGuh3RJ5e3RZKo4t233xmQ"
+      }
+    }
+  }
+}

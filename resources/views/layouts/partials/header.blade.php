@@ -24,8 +24,23 @@
             @elseif($role === 'hr_admin') bg-blue-50 text-blue-700 border border-blue-200
             @else bg-emerald-50 text-emerald-700 border border-emerald-200 @endif">
             <span class="h-2 w-2 rounded-full @if($role === 'super_admin') bg-purple-500 @elseif($role === 'hr_admin') bg-blue-500 @else bg-emerald-500 @endif animate-pulse"></span>
-            @if($role === 'super_admin') Super Admin @elseif($role === 'hr_admin') HR Admin @else Employee @endif
+            @if($role === 'super_admin') Super Admin @elseif($role === 'hr_admin') HR Admin @elseif($role === 'client') Client @elseif($role === 'manager') Manager @elseif($role === 'team_lead') Team Lead @else Employee @endif
         </span>
+
+        <!-- Notifications Link & Unread Counter -->
+        @php
+            $unreadCount = $user ? \App\Models\Notification::where('user_id', $user->id)->unread()->count() : 0;
+        @endphp
+        <a href="{{ route('notifications.index') }}" class="relative p-2 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition-colors" title="Notifications">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            @if($unreadCount > 0)
+                <span class="absolute top-1 right-1 h-4 w-4 rounded-full bg-rose-500 text-white font-bold text-[10px] flex items-center justify-center animate-pulse">
+                    {{ $unreadCount > 9 ? '9+' : $unreadCount }}
+                </span>
+            @endif
+        </a>
 
         <!-- Quick Time Clock -->
         <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-100/80 text-xs font-mono font-medium text-slate-700">

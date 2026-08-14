@@ -28,10 +28,10 @@ class LeaveWorkingDayService
 
         $holidays = [];
         if (Schema::hasTable('holidays')) {
-            $holidays = DB::table('holidays')
+            $rawHolidays = DB::table('holidays')
                 ->whereBetween('holiday_date', [$start->toDateString(), $end->toDateString()])
-                ->pluck('holiday_date')
-                ->all();
+                ->pluck('holiday_date');
+            $holidays = is_array($rawHolidays) ? $rawHolidays : ($rawHolidays instanceof \Illuminate\Support\Collection ? $rawHolidays->all() : (array) $rawHolidays);
         }
 
         $period = CarbonPeriod::create($start, $end);
