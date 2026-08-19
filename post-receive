@@ -1,0 +1,31 @@
+#!/bin/bash
+# post-receive hook for git deployment
+
+# Define deployment directory
+TARGET="/var/www/1fce205d-c142-43b5-aa6c-d42092202d98/hrm_app"
+GIT_DIR="/var/www/1fce205d-c142-43b5-aa6c-d42092202d98/hrm.git"
+PHP_BIN="/opt/ecp-php84/bin/php"
+
+echo "Starting deployment..."
+
+# Checkout the code to the target directory
+git --work-tree=$TARGET --git-dir=$GIT_DIR checkout -f
+
+echo "Code checked out to $TARGET"
+
+# Navigate to target directory
+cd $TARGET || exit
+
+# Run Composer install using the specific PHP version
+echo "Running composer install..."
+$PHP_BIN /usr/bin/composer install --no-dev --optimize-autoloader
+
+# Run Artisan commands using the specific PHP version
+echo "Running artisan commands..."
+$PHP_BIN artisan migrate --force
+$PHP_BIN artisan optimize:clear
+$PHP_BIN artisan config:cache
+$PHP_BIN artisan route:cache
+$PHP_BIN artisan view:cache
+
+echo "Deployment successful."

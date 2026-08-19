@@ -18,7 +18,7 @@ class SuperAdminSeeder extends Seeder
             ['username' => 'superadmin'],
             [
                 'name' => 'Super Administrator',
-                'email' => 'superadmin@hrm.local',
+                'email' => 'partha.mcr@gmail.com',
                 'password' => Hash::make('Admin@12345'),
                 'role' => UserRole::SUPER_ADMIN,
                 'is_active' => true,
