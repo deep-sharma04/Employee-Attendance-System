@@ -69,6 +69,15 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        // Apply dynamic SMTP & mail settings from company settings in non-testing environments
+        if (!app()->environment('testing')) {
+            try {
+                $this->app->make(\App\Services\Settings\SettingsService::class)->applyMailConfiguration();
+            } catch (\Throwable $e) {
+                // Ignore during early migrations or when database table is not yet created
+            }
+        }
+
         // Register model policies
         foreach ($this->policies as $model => $policy) {
             Gate::policy($model, $policy);

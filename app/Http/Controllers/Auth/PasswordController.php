@@ -64,48 +64,79 @@ class PasswordController extends Controller
     }
 
     /**
-     * Handle password reset request.
+     * Handle password reset request for all user roles.
      */
     public function sendResetLink(ForgotPasswordRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $input = trim((string) ($validated['username'] ?? ''));
 
-        $user = User::where('username', $validated['username'])
-            ->orWhere('email', $validated['username'])
+        // Multi-criteria lookup supporting Username, Email, Employee Code/ID, and Client Code
+        $user = User::query()
+            ->with(['employee', 'clientUser.client'])
+            ->where(function ($query) use ($input) {
+                $query->where('username', $input)
+                    ->orWhere('email', $input)
+                    ->orWhereHas('employee', function ($q) use ($input) {
+                        $q->where('employee_code', $input)
+                            ->orWhere('email', $input);
+                    })
+                    ->orWhereHas('clientUser.client', function ($q) use ($input) {
+                        $q->where('company_code', $input)
+                            ->orWhere('email', $input);
+                    });
+            })
             ->first();
 
-        if ($user) {
-            $token = Str::random(64);
-
-            DB::table('password_reset_tokens')->updateOrInsert(
-                ['email' => $user->email],
-                ['token' => Hash::make($token), 'created_at' => now()]
-            );
-
-            $this->auditLogger->log(
-                action: 'auth.password_reset_requested',
-                targetType: 'App\Models\User',
-                targetId: $user->id,
-                description: "Password reset token generated for user {$user->username}."
-            );
-
-            $resetUrl = route('password.reset', ['token' => $token, 'email' => $user->email]);
-
-            // Dispatch password reset email via Mail service
-            if (!empty($user->email)) {
-                try {
-                    $expireMinutes = (int) config('auth.passwords.users.expire', 60);
-                    Mail::to($user->email)->send(new ForgotPasswordMail($user, $resetUrl, $expireMinutes));
-                } catch (\Throwable $e) {
-                    Log::warning("Failed to send password reset email to {$user->email}: " . $e->getMessage());
-                }
+        if ($user && $user->is_active) {
+            // Resolve recipient email address (fallback to employee or client contact email if user email is empty)
+            $recipientEmail = $user->email;
+            if (empty($recipientEmail) && $user->employee && !empty($user->employee->email)) {
+                $recipientEmail = $user->employee->email;
+                $user->email = $recipientEmail;
+                $user->save();
+            } elseif (empty($recipientEmail) && $user->clientUser && $user->clientUser->client && !empty($user->clientUser->client->email)) {
+                $recipientEmail = $user->clientUser->client->email;
+                $user->email = $recipientEmail;
+                $user->save();
             }
 
-            // In local/testing development environment or via HR Admin notification
-            session()->flash('dev_reset_url', $resetUrl);
+            if (!empty($recipientEmail)) {
+                $token = Str::random(64);
+                $expireMinutes = (int) config('auth.passwords.users.expire', 60);
+
+                DB::table('password_reset_tokens')->updateOrInsert(
+                    ['email' => $recipientEmail],
+                    ['token' => Hash::make($token), 'created_at' => now()]
+                );
+
+                $this->auditLogger->log(
+                    action: 'auth.password_reset_requested',
+                    targetType: 'App\Models\User',
+                    targetId: $user->id,
+                    description: "Password reset token generated for user {$user->username} ({$recipientEmail})."
+                );
+
+                $resetUrl = route('password.reset', ['token' => $token, 'email' => $recipientEmail]);
+
+                // Dynamically apply configured SMTP settings before dispatch
+                try {
+                    app(\App\Services\Settings\SettingsService::class)->applyMailConfiguration();
+                    Mail::to($recipientEmail)->send(new ForgotPasswordMail($user, $resetUrl, $expireMinutes));
+                } catch (\Throwable $e) {
+                    Log::warning("Failed to dispatch password reset email to {$recipientEmail}: " . $e->getMessage());
+                }
+
+                // In local/testing development environment, flash reset URL for convenient testing
+                if (config('app.env') !== 'production' || config('app.debug')) {
+                    session()->flash('dev_reset_url', $resetUrl);
+                }
+
+                session()->flash('reset_sent_to', $recipientEmail);
+            }
         }
 
-        return back()->with('status', 'If your account exists and is eligible for password reset, a secure request has been processed.');
+        return back()->with('status', 'If your account exists and is eligible for password reset, a secure link has been sent to your registered email address.');
     }
 
     /**
@@ -125,9 +156,10 @@ class PasswordController extends Controller
     public function resetPassword(ResetPasswordRequest $request): RedirectResponse
     {
         $validated = $request->validated();
+        $email = trim((string) $validated['email']);
 
         $record = DB::table('password_reset_tokens')
-            ->where('email', $validated['email'])
+            ->where('email', $email)
             ->first();
 
         $expireMinutes = (int) config('auth.passwords.users.expire', 60);
@@ -137,28 +169,31 @@ class PasswordController extends Controller
             !Hash::check($validated['token'], $record->token) ||
             Carbon::parse($record->created_at)->addMinutes($expireMinutes)->isPast()
         ) {
-            return back()->withErrors(['email' => 'This password reset token is invalid or has expired.']);
+            return back()->withErrors(['email' => 'This password reset token is invalid or has expired. Please request a new link.']);
         }
 
-        $user = User::where('email', $validated['email'])->first();
+        $user = User::where('email', $email)
+            ->orWhereHas('employee', fn($q) => $q->where('email', $email))
+            ->orWhereHas('clientUser.client', fn($q) => $q->where('email', $email))
+            ->first();
 
         if (!$user) {
-            return back()->withErrors(['email' => 'Unable to find user with this email address.']);
+            return back()->withErrors(['email' => 'Unable to locate an account associated with this email address.']);
         }
 
         $user->forceFill([
             'password' => Hash::make($validated['password']),
         ])->save();
 
-        DB::table('password_reset_tokens')->where('email', $validated['email'])->delete();
+        DB::table('password_reset_tokens')->where('email', $email)->delete();
 
         $this->auditLogger->log(
             action: 'auth.password_reset_completed',
             targetType: 'App\Models\User',
             targetId: $user->id,
-            description: "User {$user->username} completed password reset with token."
+            description: "User {$user->username} completed password reset."
         );
 
-        return redirect()->route('login')->with('success', 'Your password has been reset successfully. You may now sign in.');
+        return redirect()->route('login')->with('success', 'Your password has been reset successfully. You may now sign in with your new credentials.');
     }
 }

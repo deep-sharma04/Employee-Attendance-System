@@ -234,12 +234,29 @@ class Phase16NotificationsTest extends TestCase
         $response->assertSee('Notifications Center');
         $response->assertSee('Action Item Required');
 
-        // 2. Mark single as read
+        // 2. Mark single as read via POST
         $markResponse = $this->actingAs($this->employeeUser)
             ->post(route('notifications.read', $notif->id));
 
         $notif->refresh();
         $this->assertNotNull($notif->read_at);
+
+        // 2b. Mark single as read via GET (e.g. clicking View Details link)
+        $notif2 = $this->notificationService->notify(
+            user: $this->employeeUser,
+            title: 'Task Assigned',
+            message: 'You have a new task.',
+            type: 'task',
+            data: ['url' => '/notifications']
+        );
+        $this->assertNull($notif2->read_at);
+
+        $getResponse = $this->actingAs($this->employeeUser)
+            ->get(route('notifications.read', $notif2->id));
+
+        $getResponse->assertRedirect('/notifications');
+        $notif2->refresh();
+        $this->assertNotNull($notif2->read_at);
 
         // 3. Mark all as read
         $this->notificationService->notify($this->employeeUser, 'Second Alert', 'Second message');

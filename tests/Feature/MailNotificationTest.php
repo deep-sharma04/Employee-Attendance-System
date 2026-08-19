@@ -275,4 +275,94 @@ class MailNotificationTest extends TestCase
         $this->assertStringContainsString('EMP9999', $renderedPayslip);
         $this->assertStringContainsString('60,000.00', $renderedPayslip);
     }
+
+    public function test_forgot_password_sends_email_with_employee_code(): void
+    {
+        Mail::fake();
+
+        $response = $this->post(route('password.forgot.post'), [
+            'username' => 'EMP9999',
+        ]);
+
+        $response->assertSessionHas('status');
+
+        Mail::assertSent(ForgotPasswordMail::class, function (ForgotPasswordMail $mail) {
+            return $mail->user->email === $this->employeeUser->email
+                && str_contains($mail->resetUrl, 'password/reset');
+        });
+    }
+
+    public function test_forgot_password_sends_email_with_username(): void
+    {
+        Mail::fake();
+
+        $response = $this->post(route('password.forgot.post'), [
+            'username' => 'testemployee',
+        ]);
+
+        $response->assertSessionHas('status');
+
+        Mail::assertSent(ForgotPasswordMail::class, function (ForgotPasswordMail $mail) {
+            return $mail->user->username === 'testemployee';
+        });
+    }
+
+    public function test_forgot_password_ignores_inactive_user(): void
+    {
+        Mail::fake();
+
+        $this->employeeUser->update(['is_active' => false]);
+
+        $response = $this->post(route('password.forgot.post'), [
+            'username' => 'testemployee',
+        ]);
+
+        $response->assertSessionHas('status');
+        Mail::assertNothingSent();
+    }
+
+    public function test_super_admin_can_send_smtp_test_email(): void
+    {
+        Mail::fake();
+
+        $response = $this->actingAs($this->superAdmin)
+            ->post(route('super-admin.settings.mail-test'), [
+                'test_email' => 'admin.test@example.com',
+            ]);
+
+        $response->assertSessionHas('success');
+
+        Mail::assertSent(\App\Mail\TestSmtpMail::class, function (\App\Mail\TestSmtpMail $mail) {
+            return $mail->recipient === 'admin.test@example.com';
+        });
+    }
+
+    public function test_super_admin_can_update_smtp_settings(): void
+    {
+        $response = $this->actingAs($this->superAdmin)
+            ->post(route('super-admin.settings.update'), [
+                'company_name' => 'HRM Enterprise Updated',
+                'company_address' => '456 Tech Parkway',
+                'company_email' => 'hr@hrm.local',
+                'salary_divisor' => 30,
+                'late_grace_period_minutes' => 15,
+                'half_day_threshold_minutes' => 60,
+                'mail_mailer' => 'smtp',
+                'mail_host' => 'smtp.custom-mail.com',
+                'mail_port' => 587,
+                'mail_username' => 'relay@custom-mail.com',
+                'mail_password' => 'secret_app_password',
+                'mail_encryption' => 'tls',
+                'mail_from_address' => 'support@custom-mail.com',
+                'mail_from_name' => 'Custom HRM Relay',
+            ]);
+
+        $response->assertSessionHas('success');
+
+        $settings = app(\App\Services\Settings\SettingsService::class)->all();
+        $this->assertEquals('smtp.custom-mail.com', $settings['mail_host']);
+        $this->assertEquals(587, $settings['mail_port']);
+        $this->assertEquals('support@custom-mail.com', $settings['mail_from_address']);
+        $this->assertEquals('Custom HRM Relay', $settings['mail_from_name']);
+    }
 }

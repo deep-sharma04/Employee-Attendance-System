@@ -89,8 +89,8 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/notifications/preferences', [\App\Http\Controllers\NotificationController::class, 'preferences'])->name('notifications.preferences');
     Route::post('/notifications/preferences', [\App\Http\Controllers\NotificationController::class, 'updatePreferences'])->name('notifications.preferences.update');
     Route::get('/notifications/dispatches', [\App\Http\Controllers\NotificationController::class, 'dispatches'])->name('notifications.dispatches');
-    Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
-    Route::post('/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::match(['get', 'post'], '/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::match(['get', 'post'], '/notifications/read-all', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 });
 
 /*
@@ -115,6 +115,7 @@ Route::prefix('super-admin')
         // Company & Payslip Settings
         Route::get('/settings', [CompanySettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [CompanySettingsController::class, 'update'])->name('settings.update');
+        Route::post('/settings/mail-test', [CompanySettingsController::class, 'sendTestEmail'])->name('settings.mail-test');
 
         // Project Health Engine Threshold Settings (Phase 23: Task T224)
         Route::get('/settings/project-health', [ProjectHealthSettingController::class, 'index'])->name('settings.project-health');

@@ -5,22 +5,22 @@
 
 <p>Hello <strong>{{ $user->name ?? $user->username }}</strong>,</p>
 
-<p>We received a request to reset your password for your <strong>{{ config('app.name', 'HRM System') }}</strong> account.</p>
+<p>We received a password reset request for your account (<strong>{{ $user->username }}</strong>) on <strong>{{ config('app.name', 'HRM System') }}</strong>.</p>
 
-<p>Click the button below to proceed with setting a new password:</p>
+<p>Click the button below to choose a new, secure password:</p>
 
 <div class="btn-container">
-    <a href="{{ $resetUrl }}" class="btn" target="_blank">Reset Password</a>
+    <a href="{{ $resetUrl }}" class="btn" target="_blank" style="color: #ffffff !important;">Reset Password</a>
 </div>
 
 <div class="info-box">
-    <p style="margin: 0; font-size: 13px; color: #475569;">
-        <strong>Security Notice:</strong> This password reset link is valid for <strong>{{ $expireMinutes ?? 60 }} minutes</strong>. If you did not initiate this request, no further action is needed and your account remains secure.
+    <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.5;">
+        <strong>Security Notice:</strong> This password reset link will expire in <strong>{{ $expireMinutes ?? 60 }} minutes</strong>. If you did not make this request, you can safely disregard this email; your current password remains unchanged.
     </p>
 </div>
 
-<p style="font-size: 12px; color: #64748b; margin-top: 25px; word-break: break-all;">
-    If you're having trouble clicking the "Reset Password" button, copy and paste the URL below into your web browser:<br>
-    <a href="{{ $resetUrl }}" style="color: #4f46e5;">{{ $resetUrl }}</a>
+<p style="font-size: 12px; color: #64748b; margin-top: 25px; word-break: break-all; line-height: 1.5;">
+    If you're having trouble with the button above, copy and paste this link into your web browser:<br>
+    <a href="{{ $resetUrl }}" style="color: #4f46e5; text-decoration: underline;">{{ $resetUrl }}</a>
 </p>
 @endsection

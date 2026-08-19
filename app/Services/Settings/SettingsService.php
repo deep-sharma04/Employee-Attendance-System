@@ -69,6 +69,52 @@ class SettingsService
             'late_to_absent_ratio' => 3,
             'half_day_to_absent_ratio' => 2,
             'enable_sandwich_rule' => true,
+            // SMTP & Email Configuration
+            'mail_mailer' => env('MAIL_MAILER', 'smtp'),
+            'mail_host' => env('MAIL_HOST', 'smtp.gmail.com'),
+            'mail_port' => (int) env('MAIL_PORT', 465),
+            'mail_username' => env('MAIL_USERNAME', ''),
+            'mail_password' => env('MAIL_PASSWORD', ''),
+            'mail_encryption' => env('MAIL_ENCRYPTION', 'ssl'),
+            'mail_from_address' => env('MAIL_FROM_ADDRESS', 'noreply@hrm.local'),
+            'mail_from_name' => env('MAIL_FROM_NAME', 'HRM System'),
         ];
+    }
+
+    /**
+     * Dynamically apply mail settings to runtime Laravel mail configuration.
+     */
+    public function applyMailConfiguration(): void
+    {
+        try {
+            $settings = $this->all();
+
+            $mailer = $settings['mail_mailer'] ?? config('mail.default', 'smtp');
+            $host = $settings['mail_host'] ?? config('mail.mailers.smtp.host', '127.0.0.1');
+            $port = (int) ($settings['mail_port'] ?? config('mail.mailers.smtp.port', 587));
+            $username = $settings['mail_username'] ?? config('mail.mailers.smtp.username');
+            $password = $settings['mail_password'] ?? config('mail.mailers.smtp.password');
+            $encryption = $settings['mail_encryption'] ?? config('mail.mailers.smtp.encryption', 'tls');
+            if (empty($encryption) || $encryption === 'none' || $encryption === 'null') {
+                $encryption = null;
+            }
+
+            $fromAddress = $settings['mail_from_address'] ?? config('mail.from.address', 'noreply@hrm.local');
+            $fromName = $settings['mail_from_name'] ?? config('mail.from.name', config('app.name', 'HRM System'));
+
+            config([
+                'mail.default' => $mailer,
+                'mail.mailers.smtp.transport' => 'smtp',
+                'mail.mailers.smtp.host' => $host,
+                'mail.mailers.smtp.port' => $port,
+                'mail.mailers.smtp.encryption' => $encryption,
+                'mail.mailers.smtp.username' => $username,
+                'mail.mailers.smtp.password' => $password,
+                'mail.from.address' => $fromAddress,
+                'mail.from.name' => $fromName,
+            ]);
+        } catch (\Throwable $e) {
+            // Silently fallback to static config if DB is not ready during early bootstrap
+        }
     }
 }

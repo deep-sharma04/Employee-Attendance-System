@@ -24,6 +24,15 @@ class UpdateCompanySettingsRequest extends FormRequest
             'late_to_absent_ratio' => ['nullable', 'integer', 'min:1', 'max:10'],
             'half_day_to_absent_ratio' => ['nullable', 'integer', 'min:1', 'max:10'],
             'enable_sandwich_rule' => ['nullable', 'boolean'],
+            // SMTP & Email Settings
+            'mail_mailer' => ['nullable', 'string', 'in:smtp,sendmail,log,array'],
+            'mail_host' => ['nullable', 'string', 'max:255'],
+            'mail_port' => ['nullable', 'integer', 'min:1', 'max:65535'],
+            'mail_username' => ['nullable', 'string', 'max:255'],
+            'mail_password' => ['nullable', 'string', 'max:255'],
+            'mail_encryption' => ['nullable', 'string', 'in:tls,ssl,null,none'],
+            'mail_from_address' => ['nullable', 'email', 'max:255'],
+            'mail_from_name' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

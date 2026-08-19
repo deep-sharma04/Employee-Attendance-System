@@ -9,31 +9,29 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
-class ForgotPasswordMail extends Mailable
+class TestSmtpMail extends Mailable
 {
     use Queueable, SerializesModels;
 
     public function __construct(
-        public User $user,
-        public string $resetUrl,
-        public int $expireMinutes = 60
+        public User|string $recipient,
+        public string $timestamp
     ) {}
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Password Reset Request - ' . config('app.name', 'HRM System'),
+            subject: 'SMTP Connection Test - ' . config('app.name', 'HRM System'),
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            view: 'emails.auth.forgot-password',
+            view: 'emails.system.test-smtp',
             with: [
-                'user' => $this->user,
-                'resetUrl' => $this->resetUrl,
-                'expireMinutes' => $this->expireMinutes,
+                'recipient' => is_string($this->recipient) ? $this->recipient : ($this->recipient->name ?? $this->recipient->email),
+                'timestamp' => $this->timestamp,
             ],
         );
     }

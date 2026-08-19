@@ -40,9 +40,23 @@ class CompanySettingsController extends Controller
             'late_to_absent_ratio' => (int) ($validated['late_to_absent_ratio'] ?? 3),
             'half_day_to_absent_ratio' => (int) ($validated['half_day_to_absent_ratio'] ?? 2),
             'enable_sandwich_rule' => $request->has('enable_sandwich_rule') ? $request->boolean('enable_sandwich_rule') : true,
+            // SMTP Settings
+            'mail_mailer' => $validated['mail_mailer'] ?? 'smtp',
+            'mail_host' => $validated['mail_host'] ?? 'smtp.gmail.com',
+            'mail_port' => isset($validated['mail_port']) ? (int) $validated['mail_port'] : 465,
+            'mail_username' => $validated['mail_username'] ?? '',
+            'mail_encryption' => $validated['mail_encryption'] ?? 'ssl',
+            'mail_from_address' => $validated['mail_from_address'] ?? 'noreply@hrm.local',
+            'mail_from_name' => $validated['mail_from_name'] ?? 'HRM System',
         ];
 
+        // Only update password if a new one is supplied
+        if (!empty($validated['mail_password'])) {
+            $saveData['mail_password'] = $validated['mail_password'];
+        }
+
         $this->settingsService->setMany($saveData);
+        $this->settingsService->applyMailConfiguration();
 
         $this->auditLogger->log(
             action: 'system_settings.updated',
@@ -50,9 +64,37 @@ class CompanySettingsController extends Controller
             targetId: null,
             beforeValues: $beforeValues,
             afterValues: $saveData,
-            description: 'Super Admin updated company profile and business rules configuration.'
+            description: 'Super Admin updated company profile, business rules, and SMTP configuration.'
         );
 
-        return back()->with('success', 'System business rules and company profile updated successfully.');
+        return back()->with('success', 'System business rules, company profile, and SMTP email settings updated successfully.');
+    }
+
+    /**
+     * Test the configured SMTP mail connection.
+     */
+    public function sendTestEmail(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'test_email' => ['required', 'email'],
+        ]);
+
+        $testEmail = $request->input('test_email');
+
+        try {
+            $this->settingsService->applyMailConfiguration();
+
+            \Illuminate\Support\Facades\Mail::to($testEmail)->send(
+                new \App\Mail\TestSmtpMail($testEmail, now()->toDayDateTimeString())
+            );
+
+            return back()->with('success', "Test email sent successfully to {$testEmail}. Please check the inbox / spam folder.");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("SMTP Test failed for {$testEmail}: " . $e->getMessage());
+
+            return back()->withErrors([
+                'test_email' => 'SMTP connection failed: ' . $e->getMessage(),
+            ]);
+        }
     }
 }
