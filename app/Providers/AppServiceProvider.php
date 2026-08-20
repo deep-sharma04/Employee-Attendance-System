@@ -122,7 +122,8 @@ class AppServiceProvider extends ServiceProvider
         // Phase 31: Register Internal MCP Server & Tools (T276, T278)
         if (class_exists(\Laravel\Mcp\Facades\Mcp::class)) {
             \Laravel\Mcp\Facades\Mcp::local('hrm', \App\Services\AI\HrmMcpServer::class);
-            \Laravel\Mcp\Facades\Mcp::web('/mcp', \App\Services\AI\HrmMcpServer::class);
+            \Laravel\Mcp\Facades\Mcp::web('/mcp', \App\Services\AI\HrmMcpServer::class)
+                ->middleware([\App\Http\Middleware\AuthenticateRemoteMcp::class]);
             
             // Initialize tool registry singleton mapping to McpIntegrationService
             $this->app->make(\App\Services\AI\McpToolRegistry::class);

@@ -37,33 +37,46 @@ abstract class McpBaseTool extends Tool
         if (Auth::check()) {
             /** @var User $user */
             $user = Auth::user();
-            return $user->is_active ? $user : null;
+            return ($user && $user->is_active) ? $user : null;
         }
 
-        // 2. Resolve via McpAuthService from HttpRequest or meta
+        // 2. Fallback to bound MCP authenticated user if set by stdio or middleware
         $container = Container::getInstance();
+        if ($container->bound('mcp.authenticated_user')) {
+            /** @var User $user */
+            $user = $container->make('mcp.authenticated_user');
+            return ($user && $user->is_active) ? $user : null;
+        }
+
+        // 3. Resolve via McpAuthService from HttpRequest or meta
         $authService = $container->make(McpAuthService::class);
 
-        // Check if token was passed in meta or environment
         $meta = $request->meta();
+        $username = $meta['username'] ?? null;
+        $password = $meta['password'] ?? null;
         $token = $meta['auth_token'] ?? $meta['token'] ?? null;
 
-        if (!$token && $container->bound('request')) {
-            /** @var HttpRequest $httpRequest */
-            $httpRequest = $container->make('request');
-            $user = $authService->resolveUser($httpRequest);
+        if ($username && $password) {
+            $user = $authService->authenticateByCredentials((string) $username, (string) $password);
             if ($user) {
                 return $user;
             }
         }
 
         if ($token) {
-            return $authService->authenticateByToken((string) $token);
+            $user = $authService->authenticateByToken((string) $token);
+            if ($user) {
+                return $user;
+            }
         }
 
-        // 3. Fallback to bound MCP authenticated user if set by stdio server
-        if ($container->bound('mcp.authenticated_user')) {
-            return $container->make('mcp.authenticated_user');
+        if ($container->bound('request')) {
+            /** @var HttpRequest $httpRequest */
+            $httpRequest = $container->make('request');
+            $user = $authService->resolveUser($httpRequest);
+            if ($user) {
+                return $user;
+            }
         }
 
         return null;

@@ -67,16 +67,30 @@ Or using an environment variable without placing the token in `args`:
 
 ---
 
-## 3. Connecting AI Clients via HTTP Transport (T276)
+## 3. Connecting Remote AI Clients via Remote HTTP Endpoint (`POST /mcp`)
 
-You can also connect HTTP-capable MCP clients to the internal web endpoint:
+You can connect remote HTTP-capable AI clients (ChatGPT, Gemini, Claude, Cursor) directly to the web endpoint:
 
-- **Endpoint**: `POST /mcp`
-- **Headers**:
-  ```http
-  Authorization: Bearer YOUR_MCP_TOKEN_HERE
-  Content-Type: application/json
-  ```
+- **Endpoint**: `POST /mcp` (or `https://your-hrm.com/mcp`)
+- **Authentication Options**:
+  1. **HTTP Basic Auth**:
+     ```http
+     Authorization: Basic base64(username:password)
+     Content-Type: application/json
+     ```
+  2. **Custom Headers**:
+     ```http
+     X-MCP-Username: manager01
+     X-MCP-Password: SecretPassword123!
+     Content-Type: application/json
+     ```
+  3. **Bearer Token**:
+     ```http
+     Authorization: Bearer YOUR_MCP_TOKEN_HERE
+     Content-Type: application/json
+     ```
+
+For full production deployment instructions, environment variable setup, and web server configuration, see [docs/remote-mcp.md](file:///home/ai-agent/Desktop/HRM/docs/remote-mcp.md).
 
 ---
 
