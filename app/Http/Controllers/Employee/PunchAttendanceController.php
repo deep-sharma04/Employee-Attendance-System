@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AttendanceEvent;
 use App\Models\AttendanceRecord;
 use App\Models\Employee;
+use App\Models\User;
 use App\Services\Attendance\AttendanceAggregationService;
 use App\Services\Attendance\AttendanceClassificationService;
 use App\Services\Attendance\IpValidationService;
