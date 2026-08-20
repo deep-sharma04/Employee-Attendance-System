@@ -125,6 +125,10 @@ class AppServiceProvider extends ServiceProvider
             return false;
         });
 
+        if (class_exists(\Laravel\Passport\Passport::class)) {
+            \Laravel\Passport\Passport::authorizationView('passport.authorize');
+        }
+
         // Phase 31: Register Internal MCP Server & Tools (T276, T278)
         if (class_exists(\Laravel\Mcp\Facades\Mcp::class)) {
             \Laravel\Mcp\Facades\Mcp::local('hrm', \App\Services\AI\HrmMcpServer::class);
