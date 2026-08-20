@@ -455,6 +455,22 @@ Route::prefix('client-portal')
         
         // Client Project Documents Download & Knowledge Search (Phase 27)
         Route::get('/projects/{project}/documents/{document}/download/{version?}', [ProjectDocumentController::class, 'download'])->name('projects.documents.download');
-        Route::get('/knowledge', [KnowledgeSearchController::class, 'index'])->name('knowledge.index');
     });
 
+/*
+|--------------------------------------------------------------------------
+| OAuth 2.1 / Gemini MCP Discovery Metadata
+|--------------------------------------------------------------------------
+*/
+Route::get('/.well-known/oauth-authorization-server', function () {
+    return response()->json([
+        'issuer' => url('/'),
+        'authorization_endpoint' => url('/oauth/authorize'),
+        'token_endpoint' => url('/oauth/token'),
+        'scopes_supported' => ['mcp'],
+        'response_types_supported' => ['code'],
+        'grant_types_supported' => ['authorization_code', 'refresh_token'],
+        'token_endpoint_auth_methods_supported' => ['client_secret_post', 'client_secret_basic'],
+        'code_challenge_methods_supported' => ['S256'],
+    ]);
+});

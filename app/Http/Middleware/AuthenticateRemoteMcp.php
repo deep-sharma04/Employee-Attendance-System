@@ -31,7 +31,7 @@ class AuthenticateRemoteMcp
                 ],
                 'id' => $requestId,
             ], 401, [
-                'WWW-Authenticate' => 'Basic realm="HRM Remote MCP Server"',
+                'WWW-Authenticate' => 'Bearer realm="HRM Remote MCP Server", Basic realm="HRM Remote MCP Server"',
             ]);
         }
 

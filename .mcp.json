@@ -10,6 +10,15 @@
       "env": {
         "MCP_AUTH_TOKEN": "mcp_INW3WgbUscMDwxPux1BAp8JvMC4iGbzzTdocle4w"
       }
+    },
+    "hrm_remote": {
+      "command": "php",
+      "args": [
+        "mcp-remote.php"
+      ],
+      "env": {
+        "MCP_REMOTE_URL": "https://kirikaadigital.com/mcp"
+      }
     }
   }
 }

@@ -64,6 +64,12 @@ class AppServiceProvider extends ServiceProvider
         // Enforce strict Eloquent model attributes protection (T169)
         Model::preventSilentlyDiscardingAttributes(!app()->isProduction());
 
+        if (class_exists(\Laravel\Passport\Passport::class)) {
+            \Laravel\Passport\Passport::tokensCan([
+                'mcp' => 'Access MCP Server',
+            ]);
+        }
+
         // Enforce HTTPS in production environments or when configured (T175)
         if (app()->environment('production') || config('app.force_https', false)) {
             URL::forceScheme('https');

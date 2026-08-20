@@ -54,7 +54,15 @@ class McpAuthService
             }
         }
 
-        // 4. Resolve from Bearer token or X-MCP-Token header
+        // 4. Resolve via Passport OAuth Bearer token (API Guard)
+        if ($user = Auth::guard('api')->user()) {
+            /** @var User $user */
+            if ($user->is_active) {
+                return $user;
+            }
+        }
+
+        // 5. Resolve from Custom Static Bearer token or X-MCP-Token header
         $token = $request->bearerToken() ?: $request->header('X-MCP-Token');
         if ($token) {
             $user = $this->authenticateByToken($token);
