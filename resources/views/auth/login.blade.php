@@ -30,7 +30,7 @@
             <label
                 class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-2"
             >
-                Select Your Role (Demo Accounts)
+                Select Your Role 
             </label>
 
             <!-- Compact Pills -->
