@@ -130,6 +130,8 @@ class AppServiceProvider extends ServiceProvider
             \Laravel\Mcp\Facades\Mcp::local('hrm', \App\Services\AI\HrmMcpServer::class);
             \Laravel\Mcp\Facades\Mcp::web('/mcp', \App\Services\AI\HrmMcpServer::class)
                 ->middleware([\App\Http\Middleware\AuthenticateRemoteMcp::class]);
+
+            \Laravel\Mcp\Facades\Mcp::oauthRoutes();
             
             // Initialize tool registry singleton mapping to McpIntegrationService
             $this->app->make(\App\Services\AI\McpToolRegistry::class);
