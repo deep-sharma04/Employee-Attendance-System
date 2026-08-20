@@ -167,12 +167,21 @@ class NotificationService
     {
         $assignerName = $assigner ? $assigner->name : 'System';
         $projectName = $task->project ? $task->project->name : 'Project';
+        $priorityLabel = $task->priority ? $task->priority->value : 'medium';
+
         $title = "New Task Assigned: {$task->title}";
         $message = "You have been assigned to task '{$task->title}' ({$task->task_code}) in {$projectName} by {$assignerName}.";
         
         if ($task->due_date) {
             $message .= " Due date: " . $task->due_date->format('M d, Y') . ".";
         }
+
+        if ($task->priority) {
+            $message .= " Priority: " . ucfirst($priorityLabel) . ".";
+        }
+
+        // Generate the correct task URL based on the assignee's role
+        $taskUrl = $this->resolveTaskUrl($task, $assignee);
 
         return $this->send(
             user: $assignee,
@@ -184,9 +193,34 @@ class NotificationService
                 'task_id' => $task->id,
                 'task_code' => $task->task_code,
                 'project_id' => $task->project_id,
-                'url' => $assignee->isManager() ? route('manager.tasks.show', $task) : ($assignee->isTeamLead() ? route('team-lead.tasks.show', $task) : null),
+                'project_name' => $projectName,
+                'assigner_name' => $assignerName,
+                'due_date' => $task->due_date?->toDateString(),
+                'priority' => $priorityLabel,
+                'is_recurring' => $task->is_recurring,
+                'url' => $taskUrl,
             ]
         );
+    }
+
+    /**
+     * Resolve the correct task detail URL based on the user's role.
+     */
+    protected function resolveTaskUrl(Task $task, User $user): ?string
+    {
+        if ($user->isSuperAdmin() || $user->isManager()) {
+            return route('manager.tasks.show', $task);
+        }
+
+        if ($user->isTeamLead()) {
+            return route('team-lead.tasks.show', $task);
+        }
+
+        if ($user->isEmployee()) {
+            return route('employee.tasks.show', $task);
+        }
+
+        return null;
     }
 
     /**

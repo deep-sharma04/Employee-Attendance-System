@@ -17,6 +17,7 @@ use App\Models\TaskDependency;
 use App\Models\TaskHistory;
 use App\Models\User;
 use App\Services\Audit\AuditLoggerService;
+use App\Services\Notification\NotificationService;
 use App\Services\Task\OverdueTaskDetectionService;
 use App\Services\Task\RecurringTaskService;
 use App\Services\Task\TaskDependencyService;
@@ -35,7 +36,8 @@ class TaskManagementController extends Controller
         protected AuditLoggerService $auditLogger,
         protected TaskDependencyService $dependencyService,
         protected RecurringTaskService $recurringService,
-        protected OverdueTaskDetectionService $overdueService
+        protected OverdueTaskDetectionService $overdueService,
+        protected NotificationService $notificationService
     ) {}
 
     /**
@@ -220,6 +222,30 @@ class TaskManagementController extends Controller
             description: "Task '{$task->title}' ({$task->task_code}) created."
         );
 
+        // Notify assignee on task creation
+        if ($task->assigned_to) {
+            $task->load(['project', 'assignee']);
+            $assigner = Auth::user();
+
+            $this->notificationService->notifyTaskAssigned($task, $task->assignee, $assigner);
+
+            TaskHistory::create([
+                'task_id' => $task->id,
+                'user_id' => Auth::id(),
+                'action' => 'task.assigned',
+                'field_name' => 'assigned_to',
+                'new_value' => (string) $task->assigned_to,
+                'details' => "Task assigned to {$task->assignee->name}.",
+            ]);
+
+            $this->auditLogger->logProject(
+                action: 'task.assigned',
+                projectId: $project->id,
+                afterValues: ['task_id' => $task->id, 'assigned_to' => $task->assigned_to, 'assignee_name' => $task->assignee->name],
+                description: "Task '{$task->title}' assigned to {$task->assignee->name}."
+            );
+        }
+
         return redirect()->route('manager.tasks.show', $task)
             ->with('success', "Task '{$task->title}' created successfully.");
     }
@@ -318,6 +344,7 @@ class TaskManagementController extends Controller
         }
 
         $before = $task->toArray();
+        $oldAssignedTo = $task->assigned_to;
         $task->update($validated);
 
         TaskHistory::create([
@@ -334,6 +361,35 @@ class TaskManagementController extends Controller
             afterValues: $task->toArray(),
             description: "Task '{$task->title}' ({$task->task_code}) updated."
         );
+
+        // Handle assignment / reassignment notifications
+        $newAssignedTo = $task->assigned_to;
+        if ($newAssignedTo && (int) $newAssignedTo !== (int) ($oldAssignedTo ?? 0)) {
+            $task->load(['project', 'assignee']);
+            $assigner = Auth::user();
+
+            $this->notificationService->notifyTaskAssigned($task, $task->assignee, $assigner);
+
+            $oldAssigneeName = $oldAssignedTo ? (User::find($oldAssignedTo)?->name ?? 'Unknown') : 'Unassigned';
+
+            TaskHistory::create([
+                'task_id' => $task->id,
+                'user_id' => Auth::id(),
+                'action' => 'task.reassigned',
+                'field_name' => 'assigned_to',
+                'old_value' => (string) ($oldAssignedTo ?? ''),
+                'new_value' => (string) $newAssignedTo,
+                'details' => "Task reassigned from {$oldAssigneeName} to {$task->assignee->name}.",
+            ]);
+
+            $this->auditLogger->logProject(
+                action: 'task.reassigned',
+                projectId: $task->project_id,
+                beforeValues: ['assigned_to' => $oldAssignedTo, 'assignee_name' => $oldAssigneeName],
+                afterValues: ['assigned_to' => $newAssignedTo, 'assignee_name' => $task->assignee->name],
+                description: "Task '{$task->title}' reassigned from {$oldAssigneeName} to {$task->assignee->name}."
+            );
+        }
 
         return redirect()->route('manager.tasks.show', $task)
             ->with('success', "Task updated successfully.");

@@ -4,6 +4,7 @@ use App\Enums\UserRole;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Employee\EmployeeDashboardController;
+use App\Http\Controllers\Employee\EmployeeTaskController;
 use App\Http\Controllers\Employee\EmployeeTimesheetController;
 use App\Http\Controllers\Employee\LeaveRequestController;
 use App\Http\Controllers\Employee\PayslipController;
@@ -258,6 +259,11 @@ Route::prefix('employee')
         // Project Knowledge Base & Document Downloads (Phase 27: Tasks T254 - T255)
         Route::get('/knowledge', [KnowledgeSearchController::class, 'index'])->name('knowledge.index');
         Route::get('/projects/{project}/documents/{document}/download/{version?}', [ProjectDocumentController::class, 'download'])->name('projects.documents.download');
+
+        // Employee Task Views (Task Assignment & Recurring Task Visibility)
+        Route::get('/tasks', [EmployeeTaskController::class, 'index'])->name('tasks.index');
+        Route::get('/tasks/recurring', [EmployeeTaskController::class, 'recurring'])->name('tasks.recurring');
+        Route::get('/tasks/{task}', [EmployeeTaskController::class, 'show'])->name('tasks.show');
     });
 
 /*

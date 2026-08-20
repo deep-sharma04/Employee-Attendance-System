@@ -35,6 +35,7 @@ class Task extends Model
         'is_recurring',
         'recurrence_pattern',
         'recurrence_end_date',
+        'recurring_parent_id',
         'created_by',
     ];
 
@@ -68,6 +69,22 @@ class Task extends Model
     public function parent(): BelongsTo
     {
         return $this->belongsTo(Task::class, 'parent_id');
+    }
+
+    /**
+     * The recurring task definition this occurrence was generated from.
+     */
+    public function recurringParent(): BelongsTo
+    {
+        return $this->belongsTo(Task::class, 'recurring_parent_id');
+    }
+
+    /**
+     * All generated occurrences of this recurring task definition.
+     */
+    public function recurringOccurrences(): HasMany
+    {
+        return $this->hasMany(Task::class, 'recurring_parent_id')->orderByDesc('due_date');
     }
 
     public function subtasks(): HasMany
@@ -184,5 +201,21 @@ class Task extends Model
     public function scopeForAssignee(Builder $query, int $userId): Builder
     {
         return $query->where('assigned_to', $userId);
+    }
+
+    /**
+     * Scope to only recurring task definitions (not generated occurrences).
+     */
+    public function scopeRecurringDefinitions(Builder $query): Builder
+    {
+        return $query->where('is_recurring', true)->whereNull('recurring_parent_id');
+    }
+
+    /**
+     * Check if this task is a recurring definition (template), not a generated occurrence.
+     */
+    public function isRecurringDefinition(): bool
+    {
+        return $this->is_recurring && is_null($this->recurring_parent_id);
     }
 }
