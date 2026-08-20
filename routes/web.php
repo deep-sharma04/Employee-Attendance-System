@@ -232,10 +232,12 @@ Route::prefix('employee')
         Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
         Route::get('/holidays', [\App\Http\Controllers\Employee\EmployeeHolidayController::class, 'index'])->name('holidays.index');
 
-        // Attendance & Punch
-        Route::post('/attendance/punch-in', [PunchAttendanceController::class, 'punchIn'])->name('attendance.punch-in')->middleware('throttle:30,1');
-        Route::post('/attendance/punch-out', [PunchAttendanceController::class, 'punchOut'])->name('attendance.punch-out')->middleware('throttle:30,1');
-        Route::get('/attendance/history', [PunchAttendanceController::class, 'history'])->name('attendance.history');
+        // Attendance & Punch (Accessible to all non-admin employee roles: employee, manager, team_lead)
+        Route::middleware(['role:employee,manager,team_lead'])->group(function () {
+            Route::post('/attendance/punch-in', [PunchAttendanceController::class, 'punchIn'])->name('attendance.punch-in')->middleware('throttle:30,1');
+            Route::post('/attendance/punch-out', [PunchAttendanceController::class, 'punchOut'])->name('attendance.punch-out')->middleware('throttle:30,1');
+            Route::get('/attendance/history', [PunchAttendanceController::class, 'history'])->name('attendance.history');
+        });
 
         // Leaves & Payslips
         Route::get('/leaves', [LeaveRequestController::class, 'index'])->name('leaves.index');

@@ -92,9 +92,14 @@
                 <select id="assigned_to" name="assigned_to"
                     class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50">
                     <option value="">-- Unassigned --</option>
-                    @foreach($assignees as $user)
-                        <option value="{{ $user->id }}" {{ old('assigned_to', $task->assigned_to) == $user->id ? 'selected' : '' }}>
-                            {{ $user->name }}
+                    @foreach($assignees as $u)
+                        @php
+                            $roleLabel = $u->role instanceof \App\Enums\UserRole ? $u->role->label() : (string) $u->role;
+                            $dept = $u->employee?->department ?? 'General';
+                            $teams = $u->teamMemberships->pluck('team_id')->implode(',');
+                        @endphp
+                        <option value="{{ $u->id }}" data-teams="{{ $teams }}" {{ old('assigned_to', $task->assigned_to) == $u->id ? 'selected' : '' }}>
+                            {{ $u->name }} ({{ $roleLabel }} — {{ $dept }})
                         </option>
                     @endforeach
                 </select>
@@ -221,4 +226,44 @@
         </div>
     </form>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const assigneeSelect = document.getElementById('assigned_to');
+        if (!assigneeSelect) return;
+
+        const allOptions = Array.from(assigneeSelect.querySelectorAll('option')).filter(opt => opt.value !== '');
+        const projectTeamId = "{{ $task->project?->team_id }}";
+        const currentSelectedVal = assigneeSelect.value;
+
+        assigneeSelect.innerHTML = '<option value="">-- Unassigned --</option>';
+
+        const teamMembers = [];
+        const otherStaff = [];
+
+        allOptions.forEach(opt => {
+            const clone = opt.cloneNode(true);
+            const teams = (clone.getAttribute('data-teams') || '').split(',');
+            if (projectTeamId && teams.includes(projectTeamId)) {
+                teamMembers.push(clone);
+            } else {
+                otherStaff.push(clone);
+            }
+        });
+
+        if (teamMembers.length > 0) {
+            const teamGroup = document.createElement('optgroup');
+            teamGroup.label = '⭐ Project Team Members';
+            teamMembers.forEach(opt => teamGroup.appendChild(opt));
+            assigneeSelect.appendChild(teamGroup);
+        }
+
+        const staffGroup = document.createElement('optgroup');
+        staffGroup.label = teamMembers.length > 0 ? 'All Other Staff Members' : 'All Staff Members';
+        otherStaff.forEach(opt => staffGroup.appendChild(opt));
+        assigneeSelect.appendChild(staffGroup);
+
+        assigneeSelect.value = currentSelectedVal;
+    });
+</script>
 @endsection

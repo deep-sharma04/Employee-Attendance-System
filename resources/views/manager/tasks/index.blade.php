@@ -87,8 +87,20 @@
                 </select>
             </div>
 
+            <div>
+                <select name="assigned_to" class="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50">
+                    <option value="">All Assignees</option>
+                    @foreach($assignees as $a)
+                        @php
+                            $roleLabel = $a->role instanceof \App\Enums\UserRole ? $a->role->label() : (string) $a->role;
+                        @endphp
+                        <option value="{{ $a->id }}" {{ request('assigned_to') == $a->id ? 'selected' : '' }}>{{ $a->name }} ({{ $roleLabel }})</option>
+                    @endforeach
+                </select>
+            </div>
+
             <div class="flex items-center gap-2">
-                <button type="submit" class="w-full px-3 py-2 text-xs font-semibold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors">
+                <button type="submit" class="w-full px-3 py-2 text-xs font-semibold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition-colors cursor-pointer">
                     Filter
                 </button>
                 @if(request()->anyFilled(['search', 'project_id', 'status', 'priority', 'assigned_to', 'overdue']))

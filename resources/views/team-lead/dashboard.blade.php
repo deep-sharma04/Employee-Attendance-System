@@ -5,6 +5,56 @@
 
 @section('content')
 <div class="space-y-6">
+    @php
+        $tlEmployee = \App\Models\Employee::where('user_id', Auth::id())->first();
+        $tlAttendance = $tlEmployee ? \App\Models\AttendanceRecord::where('employee_id', $tlEmployee->id)->whereDate('attendance_date', now()->toDateString())->first() : null;
+    @endphp
+    <!-- Daily Attendance Punch Banner -->
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div>
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold">
+                    <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Team Lead Shift Punch &bull; {{ now()->format('l, F j') }}
+                </div>
+                <h3 class="text-xl font-bold mt-2">Daily Attendance Punch</h3>
+                <p class="text-xs text-slate-300 mt-1 max-w-md">
+                    @if(!$tlAttendance || !$tlAttendance->punch_in)
+                        Record your shift punch in from the office network. Late arrivals beyond 15 mins count as Late.
+                    @elseif(!$tlAttendance->punch_out)
+                        You punched in at <strong class="text-white">{{ substr($tlAttendance->punch_in, 0, 5) }}</strong>. Remember to punch out before leaving.
+                    @else
+                        Shift completed! Punched in at <strong class="text-white">{{ substr($tlAttendance->punch_in, 0, 5) }}</strong> and out at <strong class="text-white">{{ substr($tlAttendance->punch_out, 0, 5) }}</strong> (Total: {{ $tlAttendance->total_hours }} hrs).
+                    @endif
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                @if(!$tlAttendance || !$tlAttendance->punch_in)
+                    <form method="POST" action="{{ route('employee.attendance.punch-in') }}">
+                        @csrf
+                        <button type="submit" class="px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-sm shadow-lg shadow-emerald-500/30 transition-all flex items-center gap-2 cursor-pointer">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+                            Punch In Now
+                        </button>
+                    </form>
+                @elseif(!$tlAttendance->punch_out)
+                    <form method="POST" action="{{ route('employee.attendance.punch-out') }}">
+                        @csrf
+                        <button type="submit" class="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-400 text-white font-bold text-sm shadow-lg shadow-amber-500/30 transition-all flex items-center gap-2 cursor-pointer">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                            Punch Out (End Shift)
+                        </button>
+                    </form>
+                @else
+                    <div class="px-5 py-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-white flex items-center gap-2">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        Day Completed ({{ $tlAttendance->total_hours }}h)
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
     <!-- Top Metrics -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between">

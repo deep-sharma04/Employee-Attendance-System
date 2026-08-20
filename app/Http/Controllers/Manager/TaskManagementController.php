@@ -95,8 +95,9 @@ class TaskManagementController extends Controller
         $projects = Project::whereNotIn('status', [ProjectStatus::COMPLETED->value, ProjectStatus::CANCELLED->value])
             ->orderBy('name')
             ->get();
-        $assignees = User::whereIn('role', [UserRole::EMPLOYEE, UserRole::TEAM_LEAD, UserRole::MANAGER])
+        $assignees = User::with(['employee', 'teamMemberships.team'])
             ->where('is_active', true)
+            ->whereNotIn('role', [UserRole::CLIENT])
             ->orderBy('name')
             ->get();
 
@@ -142,8 +143,9 @@ class TaskManagementController extends Controller
         $projects = Project::whereNotIn('status', [ProjectStatus::COMPLETED->value, ProjectStatus::CANCELLED->value])
             ->orderBy('name')
             ->get();
-        $assignees = User::whereIn('role', [UserRole::EMPLOYEE, UserRole::TEAM_LEAD, UserRole::MANAGER])
+        $assignees = User::with(['employee', 'teamMemberships.team'])
             ->where('is_active', true)
+            ->whereNotIn('role', [UserRole::CLIENT])
             ->orderBy('name')
             ->get();
 
@@ -165,8 +167,9 @@ class TaskManagementController extends Controller
         $milestones = $selectedProject ? $selectedProject->milestones : collect();
         $parentTasks = $selectedProject ? $selectedProject->tasks()->whereNull('parent_id')->orderBy('title')->get() : collect();
 
-        $assignees = User::whereIn('role', [UserRole::EMPLOYEE, UserRole::TEAM_LEAD, UserRole::MANAGER])
+        $assignees = User::with(['employee', 'teamMemberships.team'])
             ->where('is_active', true)
+            ->whereNotIn('role', [UserRole::CLIENT])
             ->orderBy('name')
             ->get();
 
@@ -294,8 +297,9 @@ class TaskManagementController extends Controller
             ->get();
         $milestones = $task->project->milestones;
         $parentTasks = $task->project->tasks()->whereNull('parent_id')->where('id', '!=', $task->id)->orderBy('title')->get();
-        $assignees = User::whereIn('role', [UserRole::EMPLOYEE, UserRole::TEAM_LEAD, UserRole::MANAGER])
+        $assignees = User::with(['employee', 'teamMemberships.team'])
             ->where('is_active', true)
+            ->whereNotIn('role', [UserRole::CLIENT])
             ->orderBy('name')
             ->get();
 

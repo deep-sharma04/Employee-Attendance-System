@@ -169,6 +169,11 @@
                 Knowledge Base
             </a>
 
+            <a href="{{ route('employee.attendance.history') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors {{ request()->routeIs('employee.attendance.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                My Attendance & Punch
+            </a>
+
             <!-- Productivity & Reporting Links (Phase 28) -->
             <div class="px-3 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Reports & Insights</div>
 
@@ -220,6 +225,11 @@
             <a href="{{ route('team-lead.knowledge.index') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors {{ request()->routeIs('team-lead.knowledge.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}">
                 <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
                 Knowledge Base
+            </a>
+
+            <a href="{{ route('employee.attendance.history') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg font-medium transition-colors {{ request()->routeIs('employee.attendance.*') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                My Attendance & Punch
             </a>
 
             <!-- Productivity & Workload Links (Phase 28) -->

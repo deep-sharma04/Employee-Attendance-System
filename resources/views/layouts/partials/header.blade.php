@@ -42,7 +42,40 @@
             @endif
         </a>
 
-        <!-- Quick Time Clock -->
+        <!-- Quick Time Clock & Punch Button for Non-Admin Staff -->
+        @php
+            $isNonAdminStaff = $user && !in_array($role, ['super_admin', 'hr_admin', 'client']);
+            $headerEmployee = $isNonAdminStaff ? \App\Models\Employee::where('user_id', $user->id)->first() : null;
+            $headerAttendance = $headerEmployee ? \App\Models\AttendanceRecord::where('employee_id', $headerEmployee->id)->whereDate('attendance_date', now()->toDateString())->first() : null;
+        @endphp
+
+        @if($isNonAdminStaff)
+            <div class="flex items-center gap-2">
+                @if(!$headerAttendance || !$headerAttendance->punch_in)
+                    <form method="POST" action="{{ route('employee.attendance.punch-in') }}">
+                        @csrf
+                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer">
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" /></svg>
+                            Punch In
+                        </button>
+                    </form>
+                @elseif(!$headerAttendance->punch_out)
+                    <form method="POST" action="{{ route('employee.attendance.punch-out') }}">
+                        @csrf
+                        <button type="submit" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 transition-all cursor-pointer">
+                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                            Punch Out
+                        </button>
+                    </form>
+                @else
+                    <span class="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                        Punched Out ({{ $headerAttendance->total_hours }}h)
+                    </span>
+                @endif
+            </div>
+        @endif
+
         <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-slate-100/80 text-xs font-mono font-medium text-slate-700">
             <svg class="h-3.5 w-3.5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

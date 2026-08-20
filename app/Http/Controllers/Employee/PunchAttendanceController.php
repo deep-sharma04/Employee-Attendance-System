@@ -24,13 +24,47 @@ class PunchAttendanceController extends Controller
         protected AttendanceAggregationService $aggregator
     ) {}
 
+    protected function getOrCreateEmployee(User $user): ?Employee
+    {
+        if ($user->isSuperAdmin() || $user->isHrAdmin() || $user->isClient()) {
+            return null;
+        }
+
+        $employee = Employee::with('shift')->where('user_id', $user->id)->first();
+
+        if (!$employee) {
+            $nameParts = explode(' ', $user->name, 2);
+            $firstName = $nameParts[0] ?? $user->name;
+            $lastName = $nameParts[1] ?? 'User';
+
+            $employee = Employee::create([
+                'user_id' => $user->id,
+                'employee_code' => 'EMP-' . str_pad($user->id, 4, '0', STR_PAD_LEFT),
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'email' => $user->email,
+                'department' => $user->isManager() ? 'Management' : ($user->isTeamLead() ? 'Team Leadership' : 'Engineering'),
+                'designation' => $user->role->label(),
+                'joining_date' => now()->toDateString(),
+                'status' => \App\Enums\EmployeeStatus::ACTIVE,
+            ]);
+            $employee->load('shift');
+        }
+
+        return $employee;
+    }
+
     /**
      * Record an employee's daily punch-in.
      */
     public function punchIn(Request $request): RedirectResponse
     {
         $user = Auth::user();
-        $employee = Employee::with('shift')->where('user_id', $user->id)->first();
+        if ($user->isSuperAdmin() || $user->isHrAdmin() || $user->isClient()) {
+            return back()->with('error', 'Punch operations are not applicable for Administrator accounts.');
+        }
+
+        $employee = $this->getOrCreateEmployee($user);
 
         if (!$employee) {
             return back()->with('error', 'No active employee profile linked to this account.');
@@ -111,7 +145,11 @@ class PunchAttendanceController extends Controller
     public function punchOut(Request $request): RedirectResponse
     {
         $user = Auth::user();
-        $employee = Employee::where('user_id', $user->id)->first();
+        if ($user->isSuperAdmin() || $user->isHrAdmin() || $user->isClient()) {
+            return back()->with('error', 'Punch operations are not applicable for Administrator accounts.');
+        }
+
+        $employee = $this->getOrCreateEmployee($user);
 
         if (!$employee) {
             return back()->with('error', 'No active employee profile linked to this account.');
@@ -172,7 +210,11 @@ class PunchAttendanceController extends Controller
     public function history(Request $request): View
     {
         $user = Auth::user();
-        $employee = Employee::where('user_id', $user->id)->firstOrFail();
+        $employee = $this->getOrCreateEmployee($user);
+
+        if (!$employee) {
+            abort(403, 'Attendance history is not available for administrator accounts.');
+        }
 
         $year = (int) $request->input('year', date('Y'));
         $month = (int) $request->input('month', date('n'));
