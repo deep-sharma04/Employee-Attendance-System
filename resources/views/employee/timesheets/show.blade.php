@@ -20,6 +20,19 @@
             <p class="text-xs text-slate-500">
                 Logged Effort: <strong class="text-indigo-600 text-sm font-bold">{{ $timesheet->total_hours }} Hours</strong> across {{ $timesheet->entries->count() }} entries
             </p>
+            @if($timesheet->first_submitted_at || $timesheet->resubmitted_at)
+                <p class="text-[11px] text-slate-400 flex flex-wrap items-center gap-2">
+                    @if($timesheet->first_submitted_at)
+                        <span>First Submitted: <strong>{{ $timesheet->first_submitted_at->format('M d, Y H:i') }}</strong></span>
+                    @endif
+                    @if($timesheet->first_submitted_at && $timesheet->resubmitted_at)
+                        <span>&bull;</span>
+                    @endif
+                    @if($timesheet->resubmitted_at)
+                        <span>Last Resubmitted: <strong>{{ $timesheet->resubmitted_at->format('M d, Y H:i') }}</strong></span>
+                    @endif
+                </p>
+            @endif
         </div>
 
         <div class="flex flex-wrap items-center gap-3">

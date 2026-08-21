@@ -244,8 +244,9 @@ class EmployeeTimesheetController extends Controller
     public function submit(Timesheet $timesheet): RedirectResponse
     {
         $user = Auth::user();
+
         if ($timesheet->user_id !== $user->id) {
-            abort(403);
+            abort(403, 'Unauthorized action.');
         }
 
         if (!$timesheet->isEditable()) {
@@ -253,26 +254,31 @@ class EmployeeTimesheetController extends Controller
         }
 
         if ($timesheet->entries()->count() === 0) {
-            return back()->with('error', 'Cannot submit an empty timesheet. Please log at least one work entry.');
+            return back()->with('error', 'Cannot submit an empty timesheet. Please add entries first.');
         }
 
-        $timesheet->status = TimesheetStatus::SUBMITTED;
+        $oldStatus = $timesheet->status;
+        $timesheet->status = TimesheetStatus::SUBMITTED->value;
         $timesheet->submitted_at = now();
-        $timesheet->rejection_reason = null;
+
+        if ($oldStatus === TimesheetStatus::DRAFT) {
+            $timesheet->first_submitted_at = now();
+        } elseif ($oldStatus === TimesheetStatus::RETURNED) {
+            $timesheet->resubmitted_at = now();
+        }
+
         $timesheet->save();
 
-        $this->auditLogger->logProject(
+        $this->auditLogger->log(
+            user: current_user(),
             action: 'timesheet.submitted',
-            projectId: $timesheet->entries()->first()?->project_id ?? 1,
-            afterValues: [
-                'timesheet_id' => $timesheet->id,
-                'status' => $timesheet->status->value,
-                'total_hours' => $timesheet->total_hours,
-            ],
-            description: "Timesheet ({$timesheet->start_date->format('M d')} - {$timesheet->end_date->format('M d, Y')}) submitted for manager/lead approval."
+            model: $timesheet,
+            afterValues: ['status' => 'submitted', 'total_hours' => $timesheet->total_hours],
+            description: "Timesheet for period {$timesheet->start_date->format('M d')} to {$timesheet->end_date->format('M d')} submitted for approval."
         );
 
-        return back()->with('success', 'Timesheet submitted successfully for review.');
+        return redirect()->route('employee.timesheets.show', $timesheet)
+            ->with('success', 'Timesheet submitted successfully for approval.');
     }
 
     /**

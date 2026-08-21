@@ -15,12 +15,14 @@ class TaskComment extends Model
         'task_id',
         'user_id',
         'comment',
+        'comment_type',
         'is_internal',
     ];
 
     protected function casts(): array
     {
         return [
+            'comment_type' => \App\Enums\TaskCommentType::class,
             'is_internal' => 'boolean',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',

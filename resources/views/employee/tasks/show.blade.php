@@ -68,6 +68,55 @@
                 </div>
             @endif
 
+            <!-- Task Comments (Task T230) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Internal Task Notes & Discussion</h3>
+                    <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-indigo-50 text-indigo-700">Internal Only</span>
+                </div>
+
+                <div class="space-y-3">
+                    @forelse($task->comments as $c)
+                        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-100 space-y-1.5">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="h-6 w-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-[10px]">
+                                        {{ strtoupper(substr($c->user?->name ?? 'U', 0, 2)) }}
+                                    </div>
+                                    <span class="font-bold text-xs text-slate-900">{{ $c->user?->name }}</span>
+                                    <span class="px-2 py-0.5 text-[10px] rounded-full border {{ $c->comment_type?->badgeClass() ?? 'bg-slate-100 text-slate-800' }}">{{ $c->comment_type?->label() ?? 'General' }}</span>
+                                    <span class="text-[10px] text-slate-400">{{ $c->created_at->diffForHumans() }}</span>
+                                </div>
+                            </div>
+                            <p class="text-xs text-slate-700 whitespace-pre-line pl-8">{{ $c->comment }}</p>
+                        </div>
+                    @empty
+                        <p class="text-xs text-slate-400 italic">No internal comments posted yet.</p>
+                    @endforelse
+                </div>
+
+                <!-- Add Comment Form -->
+                <form method="POST" action="{{ route('employee.tasks.comments.store', $task) }}" class="space-y-2 pt-2">
+                    @csrf
+                    <div class="flex flex-col gap-2">
+                        <select name="comment_type" class="px-3.5 py-2 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50 w-full sm:w-1/3">
+                            <option value="general">General</option>
+                            <option value="information_required">Information Required</option>
+                            <option value="info">Info</option>
+                            <!-- Note: Employees can select remark as well, based on current implementation -->
+                            <option value="remark">Remark</option>
+                        </select>
+                        <textarea name="comment" rows="2" required placeholder="Write internal note, update, or blocker context..."
+                            class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50"></textarea>
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="submit" class="px-4 py-2 text-xs font-semibold rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">
+                            Post Note
+                        </button>
+                    </div>
+                </form>
+            </div>
+
         </div>
 
         <!-- Sidebar Info -->
@@ -125,11 +174,19 @@
             </div>
             
             <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
-                <p class="text-xs text-slate-500 italic">
-                    Note: To update task status or add comments/hours, please use the Timesheets section or contact your Manager. Employee direct editing is restricted.
-                </p>
+                <!-- Status Update Form -->
+                <span class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Update Status</span>
+                <form method="POST" action="{{ route('employee.tasks.status', $task) }}" class="flex items-center gap-2">
+                    @csrf
+                    <select name="status" onchange="this.form.submit()" class="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 bg-slate-50 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600">
+                        @foreach(\App\Enums\TaskStatus::cases() as $st)
+                            <option value="{{ $st->value }}" {{ $task->status === $st ? 'selected' : '' }}>
+                                {{ $st->label() }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
             </div>
-        </div>
 
     </div>
 </div>

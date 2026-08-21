@@ -266,6 +266,8 @@ Route::prefix('employee')
         Route::get('/tasks', [EmployeeTaskController::class, 'index'])->name('tasks.index');
         Route::get('/tasks/recurring', [EmployeeTaskController::class, 'recurring'])->name('tasks.recurring');
         Route::get('/tasks/{task}', [EmployeeTaskController::class, 'show'])->name('tasks.show');
+        Route::post('/tasks/{task}/status', [EmployeeTaskController::class, 'updateStatus'])->name('tasks.status');
+        Route::post('/tasks/{task}/comments', [EmployeeTaskController::class, 'storeComment'])->name('tasks.comments.store');
     });
 
 /*

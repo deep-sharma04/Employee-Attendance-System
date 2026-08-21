@@ -20,6 +20,19 @@
             <p class="text-xs text-slate-500">
                 Period: <strong class="text-slate-800">{{ $timesheet->start_date->format('M d') }} — {{ $timesheet->end_date->format('M d, Y') }}</strong> &bull; Total: <strong class="text-indigo-600 font-bold text-sm">{{ $timesheet->total_hours }} Hours</strong>
             </p>
+            @if($timesheet->first_submitted_at || $timesheet->resubmitted_at)
+                <p class="text-[11px] text-slate-400 flex flex-wrap items-center gap-2">
+                    @if($timesheet->first_submitted_at)
+                        <span>First Submitted: <strong>{{ $timesheet->first_submitted_at->format('M d, Y H:i') }}</strong></span>
+                    @endif
+                    @if($timesheet->first_submitted_at && $timesheet->resubmitted_at)
+                        <span>&bull;</span>
+                    @endif
+                    @if($timesheet->resubmitted_at)
+                        <span>Last Resubmitted: <strong>{{ $timesheet->resubmitted_at->format('M d, Y H:i') }}</strong></span>
+                    @endif
+                </p>
+            @endif
         </div>
 
         <div class="flex flex-wrap items-center gap-3">

@@ -24,6 +24,19 @@
                 <span>&bull;</span>
                 <span>Calculated Labor Cost: <strong class="text-emerald-700 font-bold text-sm">${{ number_format($totalLaborCost, 2) }}</strong></span>
             </p>
+            @if($timesheet->first_submitted_at || $timesheet->resubmitted_at)
+                <p class="text-[11px] text-slate-400 flex flex-wrap items-center gap-2">
+                    @if($timesheet->first_submitted_at)
+                        <span>First Submitted: <strong>{{ $timesheet->first_submitted_at->format('M d, Y H:i') }}</strong></span>
+                    @endif
+                    @if($timesheet->first_submitted_at && $timesheet->resubmitted_at)
+                        <span>&bull;</span>
+                    @endif
+                    @if($timesheet->resubmitted_at)
+                        <span>Last Resubmitted: <strong>{{ $timesheet->resubmitted_at->format('M d, Y H:i') }}</strong></span>
+                    @endif
+                </p>
+            @endif
         </div>
 
         <div class="flex flex-wrap items-center gap-3">

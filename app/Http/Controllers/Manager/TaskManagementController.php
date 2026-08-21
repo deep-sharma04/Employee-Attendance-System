@@ -598,12 +598,14 @@ class TaskManagementController extends Controller
     {
         $validated = $request->validate([
             'comment' => ['required', 'string'],
+            'comment_type' => ['nullable', \Illuminate\Validation\Rule::enum(\App\Enums\TaskCommentType::class)],
         ]);
 
         $comment = TaskComment::create([
             'task_id' => $task->id,
             'user_id' => Auth::id(),
             'comment' => $validated['comment'],
+            'comment_type' => $validated['comment_type'] ?? \App\Enums\TaskCommentType::GENERAL->value,
             'is_internal' => true, // Strict client isolation
         ]);
 
