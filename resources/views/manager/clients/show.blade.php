@@ -101,7 +101,7 @@
                     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div>
                             <dt class="text-xs font-semibold text-slate-400 uppercase">Billing Currency</dt>
-                            <dd class="font-mono font-bold text-slate-800 mt-0.5">{{ $client->currency ?? 'USD' }}</dd>
+                            <dd class="font-mono font-bold text-slate-800 mt-0.5">{{ $client->currency ?? 'INR' }}</dd>
                         </div>
                         <div>
                             <dt class="text-xs font-semibold text-slate-400 uppercase">Billing Structure</dt>

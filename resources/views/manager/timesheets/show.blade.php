@@ -22,7 +22,7 @@
                 <span>&bull;</span>
                 <span>Total Effort: <strong class="text-indigo-600 font-bold text-sm">{{ $timesheet->total_hours }} Hours</strong></span>
                 <span>&bull;</span>
-                <span>Calculated Labor Cost: <strong class="text-emerald-700 font-bold text-sm">${{ number_format($totalLaborCost, 2) }}</strong></span>
+                <span>Calculated Labor Cost: <strong class="text-emerald-700 font-bold text-sm">₹{{ number_format($totalLaborCost, 2) }}</strong></span>
             </p>
             @if($timesheet->first_submitted_at || $timesheet->resubmitted_at)
                 <p class="text-[11px] text-slate-400 flex flex-wrap items-center gap-2">
@@ -133,7 +133,7 @@
                             </td>
 
                             <td class="px-5 py-4 font-semibold text-emerald-700">
-                                ${{ number_format($entry->calculated_cost, 2) }}
+                                ₹{{ number_format($entry->calculated_cost, 2) }}
                             </td>
 
                             <td class="px-5 py-4 text-slate-600 max-w-sm">

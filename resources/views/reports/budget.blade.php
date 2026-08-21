@@ -63,7 +63,7 @@
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between">
             <div>
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Allocated Budget</p>
-                <h3 class="text-2xl font-bold text-slate-900 mt-1">${{ number_format($totalBudget, 2) }}</h3>
+                <h3 class="text-2xl font-bold text-slate-900 mt-1">₹{{ number_format($totalBudget, 2) }}</h3>
                 <span class="text-[11px] font-medium text-slate-500">{{ $budgetData->count() }} Projects</span>
             </div>
             <div class="h-12 w-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
@@ -74,7 +74,7 @@
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between">
             <div>
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Labor Cost Consumed</p>
-                <h3 class="text-2xl font-bold text-rose-700 mt-1">${{ number_format($totalLaborCost, 2) }}</h3>
+                <h3 class="text-2xl font-bold text-rose-700 mt-1">₹{{ number_format($totalLaborCost, 2) }}</h3>
                 <span class="text-[11px] font-medium text-rose-600 font-mono">{{ $overallConsumedPercent }}% Utilized</span>
             </div>
             <div class="h-12 w-12 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
@@ -85,7 +85,7 @@
         <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-xs flex items-center justify-between">
             <div>
                 <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Remaining Budget</p>
-                <h3 class="text-2xl font-bold text-emerald-700 mt-1">${{ number_format($totalRemaining, 2) }}</h3>
+                <h3 class="text-2xl font-bold text-emerald-700 mt-1">₹{{ number_format($totalRemaining, 2) }}</h3>
                 <span class="text-[11px] font-medium text-emerald-600">Available Runway</span>
             </div>
             <div class="h-12 w-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
@@ -136,10 +136,10 @@
                                 <span class="block text-[11px] text-slate-500 font-mono">{{ $item['project']->code }}</span>
                             </td>
                             <td class="py-3.5 px-4 font-mono font-bold text-slate-900">
-                                ${{ number_format($item['budget'], 2) }}
+                                ₹{{ number_format($item['budget'], 2) }}
                             </td>
                             <td class="py-3.5 px-4 font-mono font-bold text-rose-700">
-                                ${{ number_format($item['labor_cost'], 2) }}
+                                ₹{{ number_format($item['labor_cost'], 2) }}
                             </td>
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center gap-2">
@@ -151,7 +151,7 @@
                                 </div>
                             </td>
                             <td class="py-3.5 px-4 font-mono font-semibold text-emerald-700">
-                                ${{ number_format($item['budget_remaining'], 2) }}
+                                ₹{{ number_format($item['budget_remaining'], 2) }}
                             </td>
                             <td class="py-3.5 px-4 font-mono text-slate-700">
                                 <span class="font-bold text-purple-700">{{ number_format($item['logged_approved_hours'], 1) }}h</span> / {{ number_format($item['estimated_hours'], 1) }}h

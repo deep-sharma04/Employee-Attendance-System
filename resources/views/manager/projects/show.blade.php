@@ -170,7 +170,7 @@
                         <h3 class="text-sm font-bold text-slate-900 uppercase tracking-wider">Budget & Capacity</h3>
                         <div class="flex items-center justify-between py-2 border-b border-slate-100 text-sm">
                             <span class="text-slate-500">Total Budget</span>
-                            <span class="font-bold text-slate-900">${{ number_format($project->budget, 2) }}</span>
+                            <span class="font-bold text-slate-900">₹{{ number_format($project->budget, 2) }}</span>
                         </div>
                         <div class="flex items-center justify-between py-2 border-b border-slate-100 text-sm">
                             <span class="text-slate-500">Estimated Effort</span>
