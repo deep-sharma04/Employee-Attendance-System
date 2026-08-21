@@ -152,9 +152,9 @@ class EmployeeTaskController extends Controller
         \App\Models\TaskHistory::create([
             'task_id' => $task->id,
             'user_id' => $user->id,
-            'field' => 'status',
-            'old_value' => $oldStatus->label(),
-            'new_value' => $newStatus->label(),
+            'action' => 'task.status_changed',
+            'old_value' => $oldStatus->value,
+            'new_value' => $newStatus->value,
         ]);
 
         // Notifications
