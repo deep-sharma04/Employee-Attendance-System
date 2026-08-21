@@ -67,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
         if (class_exists(\Laravel\Passport\Passport::class)) {
             \Laravel\Passport\Passport::tokensCan([
                 'mcp' => 'Access MCP Server',
+                'mcp:use' => 'Use MCP server',
             ]);
             \Laravel\Passport\Passport::tokensExpireIn(now()->addHours(8));
             \Laravel\Passport\Passport::refreshTokensExpireIn(now()->addHours(8));

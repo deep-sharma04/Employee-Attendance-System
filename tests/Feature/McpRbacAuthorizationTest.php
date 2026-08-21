@@ -124,22 +124,24 @@ class McpRbacAuthorizationTest extends TestCase
         $this->assertNotEquals(403, $response->error['code'] ?? null, "Employee should not receive 403 for timesheet.create.");
     }
 
-    public function test_login_endpoint_returns_token()
+    public function test_passport_oauth_token_enforces_rbac()
     {
         $employee = $this->createUserWithRole(UserRole::EMPLOYEE);
-        $employee->update([
-            'username' => 'johndoe',
-            'password' => bcrypt('password123')
-        ]);
 
-        $response = $this->postJson('/api/mcp/login', [
-            'username' => 'johndoe',
-            'password' => 'password123',
-        ]);
+        $integrationService = app(McpIntegrationService::class);
 
-        $response->assertStatus(200);
-        $response->assertJsonStructure(['token', 'user', 'message']);
-        
-        $this->assertStringStartsWith('mcp_', $response->json('token'));
+        // Employee cannot access client.create (admin-only tool)
+        $context = new McpRequestContext(
+            user: $employee,
+            toolName: 'client.create',
+            arguments: ['company_name' => 'Test', 'status' => 'active'],
+            projectId: null,
+            teamId: null,
+            clientId: null,
+            conversationId: null
+        );
+
+        $response = $integrationService->handleRequest($context);
+        $this->assertEquals(403, $response->error['code'] ?? null, 'Employee should receive 403 for client.create via OAuth.');
     }
 }

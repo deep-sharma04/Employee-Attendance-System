@@ -5,8 +5,6 @@ namespace App\Services\AI;
 use App\DTOs\AI\McpRequestContext;
 use App\Models\User;
 use Illuminate\Container\Container;
-use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Http\Request as HttpRequest;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Mcp\Request as McpRequest;
 use Laravel\Mcp\Response;
@@ -30,53 +28,29 @@ abstract class McpBaseTool extends Tool
 
     /**
      * Resolve the authenticated user from the active request context.
+     *
+     * For remote HTTP MCP: The AuthenticateRemoteMcp middleware has already
+     * resolved the Passport OAuth Bearer token and set Auth::user() before
+     * any tool executes. We simply read it here.
+     *
+     * For local stdio MCP: The user is bound to the container as
+     * 'mcp.authenticated_user' by the local server bootstrap.
      */
     protected function resolveUser(McpRequest $request): ?User
     {
-        // 1. Direct Laravel Auth
+        // 1. Direct Laravel Auth (set by AuthenticateRemoteMcp middleware for HTTP)
         if (Auth::check()) {
             /** @var User $user */
             $user = Auth::user();
             return ($user && $user->is_active) ? $user : null;
         }
 
-        // 2. Fallback to bound MCP authenticated user if set by stdio or middleware
+        // 2. Fallback to bound MCP authenticated user (for stdio/local transport)
         $container = Container::getInstance();
         if ($container->bound('mcp.authenticated_user')) {
             /** @var User $user */
             $user = $container->make('mcp.authenticated_user');
             return ($user && $user->is_active) ? $user : null;
-        }
-
-        // 3. Resolve via McpAuthService from HttpRequest or meta
-        $authService = $container->make(McpAuthService::class);
-
-        $meta = $request->meta();
-        $username = $meta['username'] ?? null;
-        $password = $meta['password'] ?? null;
-        $token = $meta['auth_token'] ?? $meta['token'] ?? null;
-
-        if ($username && $password) {
-            $user = $authService->authenticateByCredentials((string) $username, (string) $password);
-            if ($user) {
-                return $user;
-            }
-        }
-
-        if ($token) {
-            $user = $authService->authenticateByToken((string) $token);
-            if ($user) {
-                return $user;
-            }
-        }
-
-        if ($container->bound('request')) {
-            /** @var HttpRequest $httpRequest */
-            $httpRequest = $container->make('request');
-            $user = $authService->resolveUser($httpRequest);
-            if ($user) {
-                return $user;
-            }
         }
 
         return null;

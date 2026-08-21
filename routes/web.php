@@ -458,35 +458,15 @@ Route::prefix('client-portal')
         // Client Project Documents Download & Knowledge Search (Phase 27)
         Route::get('/projects/{project}/documents/{document}/download/{version?}', [ProjectDocumentController::class, 'download'])->name('projects.documents.download');
     });
-
 /*
 |--------------------------------------------------------------------------
 | OAuth 2.1 / Gemini MCP Discovery Metadata
 |--------------------------------------------------------------------------
+| Discovery endpoints (/.well-known/oauth-authorization-server and
+| /.well-known/oauth-protected-resource) are automatically registered
+| by Mcp::oauthRoutes() in AppServiceProvider with the correct
+| 'mcp:use' scope required by laravel/mcp v0.9.3.
+|
+| The legacy /api/mcp/login endpoint has been removed.
+| All MCP authentication is now exclusively via OAuth 2.0 PKCE.
 */
-Route::get('/.well-known/oauth-authorization-server', function () {
-    return response()->json([
-        'issuer' => url('/'),
-        'authorization_endpoint' => url('/oauth/authorize'),
-        'token_endpoint' => url('/oauth/token'),
-        'scopes_supported' => ['mcp'],
-        'response_types_supported' => ['code'],
-        'grant_types_supported' => ['authorization_code', 'refresh_token'],
-        'token_endpoint_auth_methods_supported' => ['client_secret_post', 'client_secret_basic', 'none'],
-        'code_challenge_methods_supported' => ['S256'],
-    ]);
-});
-
-Route::get('/.well-known/oauth-protected-resource', function () {
-    return response()->json([
-        'resource' => url('/mcp'),
-        'authorization_servers' => [
-            url('/')
-        ],
-        'scopes_supported' => ['mcp'],
-        'bearer_methods_supported' => ['header']
-    ]);
-});
-
-// MCP Authentication Route
-Route::post('/api/mcp/login', [\App\Http\Controllers\Api\McpLoginController::class, 'login'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->name('api.mcp.login');
