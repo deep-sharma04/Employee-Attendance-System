@@ -55,9 +55,8 @@ class McpAuthService
         }
 
         // 4. Resolve via Passport OAuth Bearer token (API Guard)
-        // Only attempt Passport auth if the token looks like a JWT (has two dots) to prevent InvalidTokenStructure exceptions
         $bearerToken = $request->bearerToken();
-        if ($bearerToken && substr_count($bearerToken, '.') === 2) {
+        if ($bearerToken) {
             try {
                 if ($user = Auth::guard('api')->user()) {
                     /** @var User $user */
@@ -66,7 +65,7 @@ class McpAuthService
                     }
                 }
             } catch (\Throwable $e) {
-                // Ignore passport exceptions and fallback
+                // Ignore Passport parsing exceptions and fallback to static token check
             }
         }
 

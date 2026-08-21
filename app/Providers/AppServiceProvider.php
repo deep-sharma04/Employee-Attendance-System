@@ -68,6 +68,9 @@ class AppServiceProvider extends ServiceProvider
             \Laravel\Passport\Passport::tokensCan([
                 'mcp' => 'Access MCP Server',
             ]);
+            \Laravel\Passport\Passport::tokensExpireIn(now()->addHours(8));
+            \Laravel\Passport\Passport::refreshTokensExpireIn(now()->addHours(8));
+            \Laravel\Passport\Passport::personalAccessTokensExpireIn(now()->addHours(8));
         }
 
         // Enforce HTTPS in production environments or when configured (T175)

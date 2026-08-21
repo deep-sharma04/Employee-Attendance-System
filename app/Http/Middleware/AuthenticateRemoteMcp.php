@@ -27,11 +27,11 @@ class AuthenticateRemoteMcp
                 'jsonrpc' => '2.0',
                 'error' => [
                     'code' => -32001,
-                    'message' => 'Unauthorized: Invalid or missing HRM authentication credentials. Please provide valid username and password (via HTTP Basic Auth or X-MCP-Username / X-MCP-Password headers) or a valid MCP Bearer token.',
+                    'message' => 'Unauthorized: Authentication required. Please log in via OAuth 2.0 PKCE to obtain an 8-hour session token.',
                 ],
                 'id' => $requestId,
             ], 401, [
-                'WWW-Authenticate' => 'Bearer realm="HRM Remote MCP Server", Basic realm="HRM Remote MCP Server"',
+                'WWW-Authenticate' => 'Bearer realm="mcp", resource_metadata="' . url('/.well-known/oauth-protected-resource') . '"',
             ]);
         }
 
