@@ -487,3 +487,6 @@ Route::get('/.well-known/oauth-protected-resource', function () {
         'bearer_methods_supported' => ['header']
     ]);
 });
+
+// MCP Authentication Route
+Route::post('/api/mcp/login', [\App\Http\Controllers\Api\McpLoginController::class, 'login'])->withoutMiddleware([\Illuminate\Foundation\Http\Middleware\VerifyCsrfToken::class])->name('api.mcp.login');

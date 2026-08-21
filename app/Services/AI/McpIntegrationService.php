@@ -19,6 +19,13 @@ class McpIntegrationService
     protected array $toolHandlers = [];
 
     /**
+     * Required RBAC permissions for each tool.
+     *
+     * @var array<string, array<string>>
+     */
+    protected array $toolPermissions = [];
+
+    /**
      * Sensitive tools that require explicit server-side approval before execution (T272).
      *
      * @var array<string>
@@ -36,11 +43,12 @@ class McpIntegrationService
     ) {}
 
     /**
-     * Register a tool execution handler.
+     * Register a tool execution handler and its required RBAC permissions.
      */
-    public function registerToolHandler(string $toolName, callable $handler): void
+    public function registerToolHandler(string $toolName, callable $handler, array $requiredPermissions = []): void
     {
         $this->toolHandlers[$toolName] = $handler;
+        $this->toolPermissions[$toolName] = $requiredPermissions;
     }
 
     public function hasToolHandler(string $toolName): bool
@@ -76,6 +84,13 @@ class McpIntegrationService
         if (!$this->securityGuard->validateScope($context)) {
             $log = $this->logAction($context, 'mutation', 'not_required', 'failed', null, 'Operation outside authorized user or project scope.');
             return McpResponse::error('Unauthorized: Action falls outside permitted project/team/client scope.', 403, null, $log->id);
+        }
+
+        // 3b. Role-Based Access Control (RBAC) Check
+        $requiredPermissions = $this->toolPermissions[$context->toolName] ?? [];
+        if (!empty($requiredPermissions) && !$context->user->hasAnyPermission($requiredPermissions)) {
+            $log = $this->logAction($context, 'mutation', 'not_required', 'failed', null, 'Missing required RBAC permission.');
+            return McpResponse::error('Unauthorized: Missing required RBAC permission.', 403, null, $log->id);
         }
 
         // 4. T275: Usage Policy Check

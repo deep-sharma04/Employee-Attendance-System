@@ -160,4 +160,22 @@ class User extends Authenticatable
     {
         return $this->hasOne(EmployeeProjectProfile::class);
     }
+
+    /**
+     * Check if the user has any of the given permissions.
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        if (empty($permissions)) {
+            return true;
+        }
+
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->roles()->whereHas('permissions', function ($query) use ($permissions) {
+            $query->whereIn('slug', $permissions);
+        })->exists();
+    }
 }

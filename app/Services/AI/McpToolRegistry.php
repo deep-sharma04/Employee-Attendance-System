@@ -47,6 +47,7 @@ class McpToolRegistry
         // 1. Client Tools (T279)
         $this->registerTool([
             'name' => 'client.search',
+            'required_permissions' => ['manage.clients'],
             'description' => 'Search clients by company name, code, or status within authorized scope.',
             'category' => 'client',
             'type' => 'read',
@@ -64,6 +65,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'client.create',
+            'required_permissions' => ['manage.clients'],
             'description' => 'Create a new client with contact and billing details.',
             'category' => 'client',
             'type' => 'mutation',
@@ -89,6 +91,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'client.update',
+            'required_permissions' => ['manage.clients'],
             'description' => 'Update an existing client details.',
             'category' => 'client',
             'type' => 'mutation',
@@ -115,6 +118,7 @@ class McpToolRegistry
         // 2. Project Tools (T280)
         $this->registerTool([
             'name' => 'project.search',
+            'required_permissions' => ['manage.projects', 'assign.tasks', 'log.timesheets'],
             'description' => 'Search projects authorized for the invoking user.',
             'category' => 'project',
             'type' => 'read',
@@ -134,6 +138,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'project.create',
+            'required_permissions' => ['manage.projects'],
             'description' => 'Create a new project under authorized client and team scope.',
             'category' => 'project',
             'type' => 'mutation',
@@ -161,6 +166,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'project.update',
+            'required_permissions' => ['manage.projects'],
             'description' => 'Update an existing project.',
             'category' => 'project',
             'type' => 'mutation',
@@ -189,6 +195,7 @@ class McpToolRegistry
         // 3. Task Tools (T281)
         $this->registerTool([
             'name' => 'task.create',
+            'required_permissions' => ['assign.tasks'],
             'description' => 'Create a new task within a project.',
             'category' => 'task',
             'type' => 'mutation',
@@ -215,6 +222,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'task.update',
+            'required_permissions' => ['assign.tasks'],
             'description' => 'Update task properties, status, or deadline.',
             'category' => 'task',
             'type' => 'mutation',
@@ -238,6 +246,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'task.assign',
+            'required_permissions' => ['assign.tasks'],
             'description' => 'Assign a task to an active, eligible team member.',
             'category' => 'task',
             'type' => 'mutation',
@@ -255,6 +264,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'task.complete',
+            'required_permissions' => ['assign.tasks', 'log.timesheets'],
             'description' => 'Mark a task as completed (enforcing blocker checks).',
             'category' => 'task',
             'type' => 'mutation',
@@ -272,6 +282,7 @@ class McpToolRegistry
         // 4. Timesheet Tools (T282)
         $this->registerTool([
             'name' => 'timesheet.search',
+            'required_permissions' => ['approve.timesheets', 'log.timesheets'],
             'description' => 'Search timesheets within authorized user and project scope.',
             'category' => 'timesheet',
             'type' => 'read',
@@ -292,6 +303,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'timesheet.create',
+            'required_permissions' => ['log.timesheets'],
             'description' => 'Create a draft weekly or daily timesheet with logged project hours.',
             'category' => 'timesheet',
             'type' => 'mutation',
@@ -327,6 +339,7 @@ class McpToolRegistry
         // 5. Restricted Employee Search (T283) - Strictly READ ONLY
         $this->registerTool([
             'name' => 'employee.search',
+            'required_permissions' => ['manage.employees', 'manage.teams', 'assign.tasks', 'log.timesheets'],
             'description' => 'Search project and team staff (strictly excludes salary, bank, tax, payroll, and IP allowlist data).',
             'category' => 'employee',
             'type' => 'read',
@@ -347,6 +360,7 @@ class McpToolRegistry
         // 6. Project Intelligence Tools (Phase 32: T285-T289)
         $this->registerTool([
             'name' => 'project.intelligence_search',
+            'required_permissions' => ['manage.projects', 'assign.tasks', 'log.timesheets', 'view.project_reports'],
             'description' => 'Execute natural-language project queries (overdue tasks, upcoming deadlines, project status, workloads) with authorized scoping.',
             'category' => 'intelligence',
             'type' => 'read',
@@ -364,6 +378,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'project.explain_health',
+            'required_permissions' => ['manage.projects', 'view.project_reports'],
             'description' => 'Explain deterministic project health calculation with grounded milestone, schedule variance, and overdue task evidence.',
             'category' => 'intelligence',
             'type' => 'read',
@@ -380,6 +395,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'task.recommend_allocation',
+            'required_permissions' => ['manage.projects', 'assign.tasks'],
             'description' => 'Recommend candidate team members for task allocation based on skills, availability, and active workload (Read-only; does not mutate assignments).',
             'category' => 'intelligence',
             'type' => 'read',
@@ -398,6 +414,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'project.management_report',
+            'required_permissions' => ['manage.projects', 'view.project_reports'],
             'description' => 'Generate structured management intelligence summaries for productivity, team workload, and authorized budget utilization.',
             'category' => 'intelligence',
             'type' => 'read',
@@ -417,6 +434,7 @@ class McpToolRegistry
         // 7. Workflow Execution & Approval Tools (Phase 33: T290-T295)
         $this->registerTool([
             'name' => 'task.bulk_reassign',
+            'required_permissions' => ['assign.tasks'],
             'description' => 'Reassign all active tasks from one team member to another (Sensitive/Destructive action; requires approval if requested by Team Lead).',
             'category' => 'workflow',
             'type' => 'destructive',
@@ -437,6 +455,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'ai.action.pending_list',
+            'required_permissions' => ['manage.projects', 'manage.teams'],
             'description' => 'List all pending AI workflow action proposals awaiting server-side approval within authorized scope.',
             'category' => 'workflow',
             'type' => 'read',
@@ -450,6 +469,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'ai.action.approve',
+            'required_permissions' => ['manage.projects', 'manage.teams'],
             'description' => 'Approve a pending AI workflow action proposal and trigger its atomic execution (Super Admin & Manager only).',
             'category' => 'workflow',
             'type' => 'mutation',
@@ -466,6 +486,7 @@ class McpToolRegistry
 
         $this->registerTool([
             'name' => 'ai.action.reject',
+            'required_permissions' => ['manage.projects', 'manage.teams'],
             'description' => 'Reject a pending AI workflow action proposal with a mandatory rejection rationale.',
             'category' => 'workflow',
             'type' => 'mutation',
@@ -491,7 +512,7 @@ class McpToolRegistry
         $this->tools[$name] = $toolDefinition;
 
         // Connect handler to McpIntegrationService
-        $this->integrationService->registerToolHandler($name, $toolDefinition['handler']);
+        $this->integrationService->registerToolHandler($name, $toolDefinition['handler'], $toolDefinition['required_permissions'] ?? []);
     }
 
     /**
