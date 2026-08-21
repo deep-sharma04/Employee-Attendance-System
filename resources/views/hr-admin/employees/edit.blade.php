@@ -234,8 +234,6 @@
             </div>
         </div>
 
-        </div>
-
         <!-- Section 5: Account Credentials -->
         <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700/60 shadow-xs space-y-4">
             <div class="border-b border-slate-100 dark:border-slate-700/60 pb-3">
