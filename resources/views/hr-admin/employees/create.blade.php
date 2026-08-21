@@ -23,6 +23,19 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="sm:col-span-2">
+                    <label for="role" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        System Role <span class="text-rose-500">*</span>
+                    </label>
+                    <select id="role" name="role" required
+                        class="mt-1.5 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                        <option value="employee" {{ old('role') == 'employee' ? 'selected' : '' }}>Employee</option>
+                        <option value="manager" {{ old('role') == 'manager' ? 'selected' : '' }}>Manager</option>
+                        <option value="team_lead" {{ old('role') == 'team_lead' ? 'selected' : '' }}>Team Lead</option>
+                    </select>
+                    @error('role') <p class="mt-1 text-[11px] text-rose-500">{{ $message }}</p> @enderror
+                </div>
+
                 <div>
                     <label for="first_name" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                         First Name <span class="text-rose-500">*</span>

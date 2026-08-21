@@ -19,6 +19,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\UserCredentialsMail;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -85,7 +88,9 @@ class ClientManagementController extends Controller
         $validated = $request->validate([
             'company_name' => ['required', 'string', 'max:150'],
             'company_code' => ['nullable', 'string', 'max:50', 'unique:clients,company_code'],
-            'email' => ['nullable', 'email', 'max:150'],
+            'email' => ['required', 'email', 'max:150', 'unique:users,email'],
+            'username' => ['required', 'string', 'max:50', 'unique:users,username'],
+            'password' => ['required', 'string', 'min:8'],
             'phone' => ['nullable', 'string', 'max:50'],
             'website' => ['nullable', 'string', 'max:255'],
             'address' => ['nullable', 'string'],
@@ -98,7 +103,31 @@ class ClientManagementController extends Controller
         $validated['created_by'] = Auth::id();
         $validated['currency'] = $validated['currency'] ?? 'USD';
 
-        $client = Client::create($validated);
+        $client = DB::transaction(function () use ($validated, &$user) {
+            $clientData = collect($validated)->except(['username', 'password'])->toArray();
+            $client = Client::create($clientData);
+
+            $user = User::create([
+                'name' => $validated['company_name'],
+                'username' => $validated['username'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => UserRole::CLIENT,
+                'is_active' => true,
+                'email_verified_at' => now(),
+            ]);
+
+            ClientUser::create([
+                'client_id' => $client->id,
+                'user_id' => $user->id,
+                'is_primary' => true,
+                'status' => 'active',
+            ]);
+            
+            return $client;
+        });
+        
+        Mail::to($user->email)->send(new UserCredentialsMail($user, $validated['password']));
 
         $this->auditLogger->logClient(
             action: 'client.created',

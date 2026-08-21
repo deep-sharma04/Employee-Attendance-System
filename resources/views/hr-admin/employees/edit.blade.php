@@ -24,6 +24,19 @@
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="sm:col-span-2">
+                    <label for="role" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        System Role <span class="text-rose-500">*</span>
+                    </label>
+                    <select id="role" name="role" required
+                        class="mt-1.5 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-3 py-2 text-xs text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                        @php $currentRole = old('role', $employee->user?->role?->value ?? (is_string($employee->user?->role) ? $employee->user?->role : 'employee')); @endphp
+                        <option value="employee" {{ $currentRole === 'employee' ? 'selected' : '' }}>Employee</option>
+                        <option value="manager" {{ $currentRole === 'manager' ? 'selected' : '' }}>Manager</option>
+                        <option value="team_lead" {{ $currentRole === 'team_lead' ? 'selected' : '' }}>Team Lead</option>
+                    </select>
+                    @error('role') <p class="mt-1 text-[11px] text-rose-500">{{ $message }}</p> @enderror
+                </div>
                 <div>
                     <label for="first_name" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                         First Name <span class="text-rose-500">*</span>
@@ -217,6 +230,37 @@
                     </label>
                     <input type="text" id="pan_number" name="pan_number" required value="{{ old('pan_number', $employee->pan_number) }}"
                         class="mt-1.5 block w-full uppercase font-mono rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                </div>
+            </div>
+        </div>
+
+        </div>
+
+        <!-- Section 5: Account Credentials -->
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700/60 shadow-xs space-y-4">
+            <div class="border-b border-slate-100 dark:border-slate-700/60 pb-3">
+                <h3 class="text-sm font-bold text-slate-900 dark:text-white">5. Account Credentials (Optional)</h3>
+                <p class="text-xs text-slate-400">Update username or password for this employee. Leave blank to keep current credentials.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="username" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        Username
+                    </label>
+                    <input type="text" id="username" name="username" value="{{ old('username', $employee->user?->username) }}"
+                        class="mt-1.5 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                    @error('username') <p class="mt-1 text-[11px] text-rose-500">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
+                    <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                        New Password
+                    </label>
+                    <input type="password" id="password" name="password"
+                        placeholder="Leave blank to keep unchanged"
+                        class="mt-1.5 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-3.5 py-2 text-xs text-slate-900 dark:text-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+                    @error('password') <p class="mt-1 text-[11px] text-rose-500">{{ $message }}</p> @enderror
                 </div>
             </div>
         </div>

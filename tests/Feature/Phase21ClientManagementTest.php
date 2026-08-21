@@ -119,6 +119,8 @@ class Phase21ClientManagementTest extends TestCase
             'company_name' => 'Acme Corporation',
             'company_code' => 'ACME',
             'email' => 'contact@acme.com',
+            'username' => 'acme_admin',
+            'password' => 'Password123!',
             'phone' => '+1234567890',
             'website' => 'https://acme.example.com',
             'address' => '100 Acme Way, Silicon Valley',
@@ -475,11 +477,18 @@ class Phase21ClientManagementTest extends TestCase
     public function test_t213_audit_trail_for_client_actions(): void
     {
         // 1. Create client generates audit record
-        $this->actingAs($this->manager)->post(route('manager.clients.store'), [
+        $response = $this->actingAs($this->manager)->post(route('manager.clients.store'), [
             'company_name' => 'Initech LLC',
             'company_code' => 'INIT',
+            'email' => 'initech@example.com',
+            'username' => 'initech_admin',
+            'password' => 'Password123!',
             'status' => 'active',
         ]);
+        if (session('errors')) {
+            dump(session('errors')->messages());
+        }
+        $response->assertSessionHasNoErrors();
 
         $client = Client::where('company_code', 'INIT')->first();
         $this->assertDatabaseHas('audit_logs', [

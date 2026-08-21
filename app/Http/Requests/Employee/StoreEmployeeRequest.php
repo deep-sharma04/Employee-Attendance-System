@@ -24,6 +24,7 @@ class StoreEmployeeRequest extends FormRequest
     {
         return [
             // User Credentials
+            'role' => ['required', 'string', 'in:employee,manager,team_lead'],
             'username' => ['nullable', 'string', 'max:50', 'alpha_dash', 'unique:users,username'],
             'password' => ['nullable', 'string', 'min:8'],
             'auto_generate_password' => ['nullable', 'boolean'],

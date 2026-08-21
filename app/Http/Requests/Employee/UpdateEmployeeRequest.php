@@ -28,6 +28,17 @@ class UpdateEmployeeRequest extends FormRequest
         $userId = $employee->user_id;
 
         return [
+            // User Credentials
+            'role' => ['required', 'string', 'in:employee,manager,team_lead'],
+            'username' => [
+                'nullable',
+                'string',
+                'max:50',
+                'alpha_dash',
+                Rule::unique('users', 'username')->ignore($userId),
+            ],
+            'password' => ['nullable', 'string', 'min:8'],
+
             // Personal Information
             'first_name' => ['required', 'string', 'max:50'],
             'last_name' => ['required', 'string', 'max:50'],

@@ -19,6 +19,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\UserCredentialsMail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -135,12 +137,12 @@ class EmployeeManagementController extends Controller
                 'username' => $username,
                 'email' => $validated['email'],
                 'password' => Hash::make($rawPassword),
-                'role' => UserRole::EMPLOYEE,
+                'role' => UserRole::from($validated['role']),
                 'is_active' => true,
                 'email_verified_at' => now(),
             ]);
 
-            $employeeRole = Role::where('slug', UserRole::EMPLOYEE->value)->first();
+            $employeeRole = Role::where('slug', UserRole::from($validated['role'])->value)->first();
             if ($employeeRole) {
                 $user->roles()->syncWithoutDetaching([$employeeRole->id]);
             }
@@ -197,6 +199,10 @@ class EmployeeManagementController extends Controller
 
             return $emp;
         });
+        
+        if ($employee->user) {
+            Mail::to($employee->user->email)->send(new UserCredentialsMail($employee->user, $rawPassword));
+        }
 
         // Flash temporary credentials for HR communication
         session()->flash('created_employee_credentials', [
@@ -254,17 +260,36 @@ class EmployeeManagementController extends Controller
         $employee = Employee::findOrFail($id);
         $validated = $request->validated();
 
-        $beforeValues = $employee->toArray();
+        $beforeValues = $employee->getAttributes();
 
         DB::transaction(function () use ($employee, $validated, $beforeValues) {
-            $employee->update($validated);
+            $employeeData = \Illuminate\Support\Arr::except($validated, ['role', 'username', 'password']);
+            $employee->update($employeeData);
 
-            // Sync user name & email
+            // Sync user details
             if ($employee->user) {
-                $employee->user->forceFill([
+                $userUpdates = [
                     'name' => trim("{$validated['first_name']} {$validated['last_name']}"),
                     'email' => $validated['email'],
-                ])->save();
+                ];
+                
+                if (isset($validated['role'])) {
+                    $userUpdates['role'] = UserRole::from($validated['role']);
+                    $employeeRole = Role::where('slug', $userUpdates['role']->value)->first();
+                    if ($employeeRole) {
+                        $employee->user->roles()->sync([$employeeRole->id]);
+                    }
+                }
+
+                if (!empty($validated['username'])) {
+                    $userUpdates['username'] = $validated['username'];
+                }
+
+                if (!empty($validated['password'])) {
+                    $userUpdates['password'] = Hash::make($validated['password']);
+                }
+
+                $employee->user->forceFill($userUpdates)->save();
             }
 
             $this->auditLogger->log(

@@ -111,6 +111,7 @@ class Phase3EmployeeManagementTest extends TestCase
         $payload = [
             'first_name' => 'Michael',
             'last_name' => 'Scott',
+            'role' => 'employee',
             'email' => 'michael.scott@hrm.local',
             'phone' => '+91 9988776655',
             'gender' => 'male',
@@ -178,6 +179,7 @@ class Phase3EmployeeManagementTest extends TestCase
         $updateResponse = $this->actingAsHrAdmin()->put("/hr-admin/employees/{$employee->id}", [
             'first_name' => 'Pamela',
             'last_name' => 'Halpert',
+            'role' => 'employee',
             'email' => 'pamela.halpert@hrm.local',
             'phone' => '+91 9123456789',
             'gender' => 'female',

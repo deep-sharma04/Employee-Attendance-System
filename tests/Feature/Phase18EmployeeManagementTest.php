@@ -95,6 +95,7 @@ class Phase18EmployeeManagementTest extends TestCase
         $payload = [
             'first_name' => 'Edward',
             'last_name' => 'Norton',
+            'role' => 'employee',
             'email' => 'edward.norton@hrm.local',
             'phone' => '+15550198822',
             'gender' => 'male',
@@ -174,6 +175,7 @@ class Phase18EmployeeManagementTest extends TestCase
         $payload = [
             'first_name' => 'Franklin',
             'last_name' => 'Miller',
+            'role' => 'employee',
             'email' => 'franklin.updated@hrm.local',
             'phone' => '+15550193344',
             'gender' => 'male',

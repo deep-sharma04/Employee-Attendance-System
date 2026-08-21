@@ -48,12 +48,38 @@
             <!-- Email -->
             <div>
                 <label for="email" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Corporate Email
+                    Corporate Email <span class="text-rose-500">*</span>
                 </label>
-                <input type="email" id="email" name="email" value="{{ old('email') }}"
+                <input type="email" id="email" name="email" value="{{ old('email') }}" required
                     class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50 @error('email') border-rose-400 @enderror"
                     placeholder="contact@acme.com">
                 @error('email')
+                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Username -->
+            <div>
+                <label for="username" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Username <span class="text-rose-500">*</span>
+                </label>
+                <input type="text" id="username" name="username" value="{{ old('username') }}" required
+                    class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50 @error('username') border-rose-400 @enderror"
+                    placeholder="e.g. acme_admin">
+                @error('username')
+                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label for="password" class="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Password <span class="text-rose-500">*</span>
+                </label>
+                <input type="password" id="password" name="password" required minlength="8"
+                    class="w-full px-3.5 py-2.5 text-sm rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 bg-slate-50/50 @error('password') border-rose-400 @enderror"
+                    placeholder="Min. 8 characters">
+                @error('password')
                     <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
                 @enderror
             </div>
