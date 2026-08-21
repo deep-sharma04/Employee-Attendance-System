@@ -270,9 +270,9 @@ class EmployeeTimesheetController extends Controller
         $timesheet->save();
 
         $this->auditLogger->log(
-            user: current_user(),
             action: 'timesheet.submitted',
-            model: $timesheet,
+            targetType: 'Project',
+            targetId: $timesheet->project_id,
             afterValues: ['status' => 'submitted', 'total_hours' => $timesheet->total_hours],
             description: "Timesheet for period {$timesheet->start_date->format('M d')} to {$timesheet->end_date->format('M d')} submitted for approval."
         );

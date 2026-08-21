@@ -88,7 +88,7 @@ class McpIntegrationService
 
         // 3b. Role-Based Access Control (RBAC) Check
         $requiredPermissions = $this->toolPermissions[$context->toolName] ?? [];
-        if (!empty($requiredPermissions) && !$context->user->hasAnyPermission($requiredPermissions)) {
+        if (!empty($requiredPermissions) && !$context->user->isSuperAdmin() && !$context->user->hasAnyPermission($requiredPermissions)) {
             $log = $this->logAction($context, 'mutation', 'not_required', 'failed', null, 'Missing required RBAC permission.');
             return McpResponse::error('Unauthorized: Missing required RBAC permission.', 403, null, $log->id);
         }

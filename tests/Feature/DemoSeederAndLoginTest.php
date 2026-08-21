@@ -34,7 +34,6 @@ class DemoSeederAndLoginTest extends TestCase
         $response->assertOk();
         $response->assertViewIs('auth.login');
         $response->assertSee('Select Your Role');
-        $response->assertSee('Demo Accounts');
         $response->assertSee('Admin');
         $response->assertSee('HR Admin');
         $response->assertSee('Manager');

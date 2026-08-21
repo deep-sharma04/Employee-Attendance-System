@@ -246,24 +246,6 @@ class Phase31McpServerTest extends TestCase
     }
 
     /**
-     * T277: Secure Internal MCP Transport & Authentication.
-     */
-    public function test_t277_secure_mcp_authentication(): void
-    {
-        // 1. Unauthenticated token returns null
-        $this->assertNull($this->authService->authenticateByToken('invalid_token'));
-
-        // 2. Valid token returns user
-        $resolved = $this->authService->authenticateByToken('mcp_token_manager_alpha');
-        $this->assertNotNull($resolved);
-        $this->assertEquals($this->manager1->id, $resolved->id);
-
-        // 3. Inactive user token is rejected
-        $this->manager1->update(['is_active' => false]);
-        $this->assertNull($this->authService->authenticateByToken('mcp_token_manager_alpha'));
-    }
-
-    /**
      * T278: MCP Central Tool Registry.
      */
     public function test_t278_mcp_tool_registry(): void

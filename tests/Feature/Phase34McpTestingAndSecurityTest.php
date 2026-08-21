@@ -131,6 +131,19 @@ class Phase34McpTestingAndSecurityTest extends TestCase
             'is_active' => true,
         ]);
 
+        $this->seed(\Database\Seeders\RoleAndPermissionSeeder::class);
+        $roles = \App\Models\Role::all()->keyBy('slug');
+
+        $this->superAdmin->roles()->sync([$roles[UserRole::SUPER_ADMIN->value]->id]);
+        $this->manager1->roles()->sync([$roles[UserRole::MANAGER->value]->id]);
+        $this->manager2->roles()->sync([$roles[UserRole::MANAGER->value]->id]);
+        $this->teamLead->roles()->sync([$roles[UserRole::TEAM_LEAD->value]->id]);
+        $this->employeeUser1->roles()->sync([$roles[UserRole::EMPLOYEE->value]->id]);
+        $this->employeeUser2->roles()->sync([$roles[UserRole::EMPLOYEE->value]->id]);
+        $this->inactiveUser->roles()->sync([$roles[UserRole::EMPLOYEE->value]->id]);
+        $this->clientUser1->roles()->sync([$roles[UserRole::CLIENT->value]->id]);
+        $this->clientUser2->roles()->sync([$roles[UserRole::CLIENT->value]->id]);
+
         $this->client1 = Client::create([
             'company_name' => 'Acme Corporation',
             'company_code' => 'CLT-ACME',
@@ -364,7 +377,8 @@ class Phase34McpTestingAndSecurityTest extends TestCase
             arguments: ['query' => 'David']
         );
         $res = $this->integrationService->handleRequest($employeeSearchCtx);
-        $this->assertTrue($res->isSuccess);
+        if (!$res->isSuccess) { echo "ERROR CODE: " . $res->error["code"] . " MSG: " . $res->error["message"] . "
+"; } $this->assertTrue($res->isSuccess);
         $employees = $res->data['employees'] ?? [];
         $this->assertNotEmpty($employees);
 
@@ -431,7 +445,8 @@ class Phase34McpTestingAndSecurityTest extends TestCase
         );
         $this->assertTrue($this->securityGuard->validateScope($client1Search));
         $res = $this->integrationService->handleRequest($client1Search);
-        $this->assertTrue($res->isSuccess);
+        if (!$res->isSuccess) { echo "ERROR CODE: " . $res->error["code"] . " MSG: " . $res->error["message"] . "
+"; } $this->assertTrue($res->isSuccess);
         $this->assertEquals(1, $res->data['count']);
         $this->assertEquals($this->project1->id, $res->data['projects'][0]['id']);
 
@@ -516,7 +531,8 @@ class Phase34McpTestingAndSecurityTest extends TestCase
             arguments: ['query' => $injectionPayload]
         );
         $res = $this->integrationService->handleRequest($context);
-        $this->assertTrue($res->isSuccess);
+        if (!$res->isSuccess) { echo "ERROR CODE: " . $res->error["code"] . " MSG: " . $res->error["message"] . "
+"; } $this->assertTrue($res->isSuccess);
         // Assert users table still exists
         $this->assertDatabaseHas('users', ['id' => $this->superAdmin->id]);
 

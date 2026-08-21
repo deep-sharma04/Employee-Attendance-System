@@ -118,7 +118,7 @@ class McpToolRegistry
         // 2. Project Tools (T280)
         $this->registerTool([
             'name' => 'project.search',
-            'required_permissions' => ['manage.projects', 'assign.tasks', 'log.timesheets'],
+            'required_permissions' => ['manage.projects', 'assign.tasks', 'log.timesheets', 'view.client_portal'],
             'description' => 'Search projects authorized for the invoking user.',
             'category' => 'project',
             'type' => 'read',

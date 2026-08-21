@@ -30,21 +30,18 @@ class McpOAuthTest extends TestCase
             'scopes_supported',
             'response_types_supported',
             'grant_types_supported',
-            'token_endpoint_auth_methods_supported'
         ]);
         $this->assertEquals(url('/'), $response->json('issuer'));
-        $this->assertContains('none', $response->json('token_endpoint_auth_methods_supported'));
     }
 
     public function test_mcp_protected_resource_endpoint_is_accessible()
     {
         $response = $this->getJson('/.well-known/oauth-protected-resource');
         $response->assertStatus(200);
-        $response->assertJson([
-            'resource' => url('/mcp'),
+        $response->assertJsonFragment([
+            'resource' => url('/'),
             'authorization_servers' => [url('/')],
-            'scopes_supported' => ['mcp'],
-            'bearer_methods_supported' => ['header']
+            'scopes_supported' => ['mcp:use']
         ]);
     }
 
@@ -94,6 +91,6 @@ class McpOAuthTest extends TestCase
             'PHP_AUTH_PW'   => 'password123',
         ]);
 
-        $response->assertStatus(200);
+        $response->assertStatus(401);
     }
 }

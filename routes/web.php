@@ -457,6 +457,7 @@ Route::prefix('client-portal')
         
         // Client Project Documents Download & Knowledge Search (Phase 27)
         Route::get('/projects/{project}/documents/{document}/download/{version?}', [ProjectDocumentController::class, 'download'])->name('projects.documents.download');
+        Route::get('/knowledge', [KnowledgeSearchController::class, 'index'])->name('knowledge.index');
     });
 /*
 |--------------------------------------------------------------------------
